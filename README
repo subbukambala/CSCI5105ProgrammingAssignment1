@@ -1,0 +1,11 @@
+TO BE DONE.
+
+To build and run:
+cd src/
+make
+rmiregistry &
+java SuperPeer &
+java Peer
+
+
+The SuperPeer will output a couple debug messages.

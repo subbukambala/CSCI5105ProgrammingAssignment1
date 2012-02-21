@@ -32,7 +32,7 @@ JC = javac
 #
 
 .java.class:
-        $(JC) $(JFLAGS) $*.java
+	$(JC) $(JFLAGS) $*.java
 
 
 #
@@ -40,18 +40,26 @@ JC = javac
 #
 
 CLASSES = \
-        Foo.java \
-        Blah.java \
-        Library.java \
-        Main.java 
+	Logger.java \
+        NodeID.java \
+        Address.java \
+        IPPortAddress.java \
+        SuperPeerInterface.java \
+	PeerInterface.java \
+	SuperPeer.java \
+	Peer.java
+
+
 
 
 #
 # the default make target entry
 #
 
-default: classes
+default: classes SuperPeer_Stub.class
 
+SuperPeer_Stub.class: SuperPeer.class
+	rmic SuperPeer
 
 #
 # This target entry uses Suffix Replacement within a macro: 
@@ -69,4 +77,4 @@ classes: $(CLASSES:.java=.class)
 #
 
 clean:
-        $(RM) *.class
+	$(RM) *.class
