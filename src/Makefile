@@ -3,7 +3,7 @@
 # define compiler and compiler flag variables
 #
 
-JFLAGS = -g
+JFLAGS = -g -classpath ../jars/commons-cli-1.2.jar:.
 JC = javac
 
 

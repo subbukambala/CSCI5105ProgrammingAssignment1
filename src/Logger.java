@@ -35,9 +35,9 @@ public class Logger
     Logger(String subsys)
     {
 	logger = java.util.logging.Logger.getLogger(subsys);
-	logger.setLevel(Level.FINER);
+	logger.setLevel(Level.FINEST);
 	Handler ch = new ConsoleHandler();
-	ch.setLevel(Level.FINER);
+	ch.setLevel(Level.FINEST);
 
 	//SimpleFormatter formatter = new SimpleFormatter();
 	//StreamHandler sh = new StreamHandler(System.out, formatter);

@@ -15,6 +15,13 @@ public interface SuperPeerInterface extends Remote {
      * @return An Address.
      * @exception RemoteException if the remote invocation fails.
      */
+
+    /** 
+     * @return The size of the finger table.
+     * @exception RemoteException if the remote invocation fails.
+     */
+    public int getFingerTableSize() throws RemoteException;
+
     public Address getAddress(NodeID id) throws RemoteException;
     /**
      * Retrieves all known nodes.

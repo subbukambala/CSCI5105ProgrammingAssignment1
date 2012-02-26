@@ -7,10 +7,42 @@ import java.io.Serializable;
 public class NodeID implements Serializable
 {
 
-    public NodeID () 
+    /**
+     * Internal respesentation of a NodeID is an integer.
+     */
+    private int id;
+
+    /**
+     * Intialize the NodeID
+     */
+    public NodeID (int _id) 
     {
-	
+	id = _id;
     }
 
+    
+    /**
+     * Check if two NodeIDs are equal.
+     */
+    public boolean equal(NodeID b)
+    {
+	return (id == b.id);
+    }
+
+    /**
+     * Check if this NodeID is less than another.
+     */
+    public boolean less(NodeID b)
+    {
+	return (id == b.id);
+    }
+
+    /**
+     * Convert this NodeID to a String.
+     */
+    public String toString()
+    {
+	return Integer.toString(id);
+    }
 
 }

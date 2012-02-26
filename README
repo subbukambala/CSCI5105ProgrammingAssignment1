@@ -1,11 +1,14 @@
 TO BE DONE.
 
-To build and run:
+TO BUILD:
 cd src/
 make
-rmiregistry &
-java SuperPeer &
-java Peer
+
+TO RUN SUPER PEER:
+scripts/RunSuperPeer.sh [This script is path agnostic]
+
+TO RUN PEER:
+scripts/RunPeer.sh [This script is path agnostic]
 
 
-The SuperPeer will output a couple debug messages.
+Both will output some messages.
