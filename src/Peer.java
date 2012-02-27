@@ -1,5 +1,7 @@
 import java.rmi.*;
+import java.rmi.server.*;
 import java.util.logging.Level;
+import java.util.HashMap;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.Options;
@@ -17,7 +19,7 @@ import org.apache.commons.cli.HelpFormatter;
 /**
  * @todo Everything
  */
-public class Peer implements PeerInterface
+public class Peer extends UnicastRemoteObject implements PeerInterface
 {
     /**
      * Logger for Peer.
@@ -27,25 +29,60 @@ public class Peer implements PeerInterface
     /**
      * This peer's NodeID.
      */
-    NodeID nodeid;
+    Key nodeid;
+
+    /**
+     * SuperPeer
+     */
+    SuperPeerInterface superpeer;
+
+
+    /**
+     * A cache to map Node ID's to IP.
+     */
+    HashMap<Key,PeerInterface> peercache;
 
     /**
      * @todo Everything
      */
     public Peer (String sp) throws Exception
     {
-	
-	SuperPeerInterface superpeer = 
-	    (SuperPeerInterface) Naming.lookup ("//"+sp+"/SuperPeer");
+	// Find the SuperPeer
+       	superpeer = (SuperPeerInterface) Naming.lookup ("//"+sp+"/SuperPeer");
+	// Get this Peer's NodeID
 	nodeid = superpeer.join();
+	// Register with the RMI Registry.
+	Naming.rebind (nodeid.toString(),this);
+	//Initialize the node cache
+	peercache = new HashMap<Key,PeerInterface>();
+	// Initialize the Logger
 	lg = new Logger("Peer:"+nodeid.toString());
         lg.log(Level.FINEST,"Peer started.");
-	superpeer.getAddress(nodeid);
-	superpeer.getPeers();
+
+	// TEST
+	lg.log(Level.FINEST,"Testing RMI self call of getName - "+getPeer(nodeid).getName());
+	// TEST
+	// superpeer.getPeers();
     }
 
     
+    private PeerInterface getPeer(Key node) throws Exception
+    {
+	PeerInterface peer = peercache.get(node);
+	if( peer == null )
+	{
+	    peer = (PeerInterface) Naming.lookup("//"+superpeer.getAddress(node)+"/"+node.toString());
+	    peercache.put(node,peer);
+	}
+	return peer;
+    }
 
+
+    public String getName() throws Exception
+    {
+	return ("Peer-"+nodeid.toString());
+
+    }
 
     /**
      * @todo Everything

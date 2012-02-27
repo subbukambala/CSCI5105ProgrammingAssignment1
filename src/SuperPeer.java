@@ -1,3 +1,9 @@
+/**
+ * @authors Bala Subrahmanyam Kambala, Daniel William DaCosta
+ * @license GPLv3 (http://www.gnu.org/copyleft/gpl.html)
+ * @descriptrion Implements the Super Peer Interface.
+ */
+
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.logging.Level;
@@ -8,12 +14,10 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
-
-/**
- * @authors Bala Subrahmanyam Kambala, Daniel William DaCosta
- * @license GPLv3 (http://www.gnu.org/copyleft/gpl.html)
- * @descriptrion Implements the Super Peer Interface.
- */
+import java.util.HashMap;
+import java.math.BigInteger;
+import java.security.SecureRandom;
+import java.security.NoSuchAlgorithmException;
 
 public class SuperPeer extends UnicastRemoteObject implements SuperPeerInterface 
 {
@@ -23,10 +27,22 @@ public class SuperPeer extends UnicastRemoteObject implements SuperPeerInterface
     private Logger lg;
 
     /**
-     * Store the next NodeID seed.
+     * We would like node ID's to be unique. This table will be used 
+     * to ensure this.
      */
-    private int nextnodeidseed;
+    private HashMap<String,PeerInfo> peertable;
 
+
+    /**
+     * Random number generator for Node IDs.
+     */
+    private SecureRandom prng;
+
+
+    /**
+     * SHA1 Hasher.
+     */
+    private HasherInterface hasher;
 
     /**
      * The size of per node finger table.
@@ -36,27 +52,31 @@ public class SuperPeer extends UnicastRemoteObject implements SuperPeerInterface
     /**
      * @todo Everything
      */
-    SuperPeer (int _fsize) throws RemoteException
+    SuperPeer (int _fsize) throws RemoteException, NoSuchAlgorithmException
     {
 	lg = new Logger("SuperPeer");
-	nextnodeidseed = 0;
 	fsize = _fsize;
+	peertable = new HashMap<String,PeerInfo>();
+	prng = SecureRandom.getInstance("SHA1PRNG");
+	hasher = new SHA1Hasher();
 	lg.log(Level.FINEST,"SuperPeer started.");
     }
 
     /**
-     * @return A NodeID.
+     * @return A Key.
      * @exception RemoteException if the remote invocation fails.
      */
-    public NodeID join() throws RemoteException
+    public Key join() throws RemoteException,ServerNotActiveException
     {
 	lg.log(Level.FINEST,"Join Called.");
-	NodeID rv;
+	Key rv;
 	synchronized(this)
 	{
-	    nextnodeidseed++;
-	    rv = new NodeID(nextnodeidseed);
-	    lg.log(Level.FINEST,"Allocating Node ID "+Integer.toString(nextnodeidseed)+".");
+	    BigInteger bi = hasher.getHash(new Integer(prng.nextInt()).toString()).abs();
+	    //XXX: ID collisions need to be detected using peertable!
+	    rv = new Key(bi);
+	    peertable.put(rv.toString(),new PeerInfo( RemoteServer.getClientHost()));
+	    lg.log(Level.FINEST,"Allocating Node ID "+rv.toString()+".");
 	}	
 	return rv;
     }
@@ -71,18 +91,24 @@ public class SuperPeer extends UnicastRemoteObject implements SuperPeerInterface
     }
 
     /**
-     * Retrieves an Address from a NodeID.
-     * @return An Address.
+     * Retrieves an Address from a Key.
+     * @return A string containing an IP String Address.
      * @exception RemoteException if the remote invocation fails.
      */
-    public Address getAddress(NodeID id) throws RemoteException
+    public String getAddress(Key id) throws RemoteException
     {
 	lg.log(Level.FINER,"getAddress Called.");
-	return new IPPortAddress();
+	PeerInfo pi = peertable.get(id.toString());
+	if(pi == null) 
+	{
+	    lg.log(Level.WARNING,"getAddress failed on "+id.toString()+", returning null!");
+	    return null;
+        }
+	else return pi.getIP();
     }
     /**
      * Retrieves all known nodes.
-     * @todo This class needs to returns some mapping between NodeID's and Addresses.
+     * @todo This class needs to returns some mapping between Key's and Addresses.
      * @return ???
      * @exception RemoteException if the remote invocation fails.
      */

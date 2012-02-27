@@ -40,10 +40,10 @@ JC = javac
 #
 
 CLASSES = \
+	HasherInterface.java \
+	SHA1Hasher.java \
 	Logger.java \
-        NodeID.java \
-        Address.java \
-        IPPortAddress.java \
+        Key.java \
         SuperPeerInterface.java \
 	PeerInterface.java \
 	SuperPeer.java \
@@ -56,10 +56,13 @@ CLASSES = \
 # the default make target entry
 #
 
-default: classes SuperPeer_Stub.class
+default: classes SuperPeer_Stub.class Peer_Stub.class
 
 SuperPeer_Stub.class: SuperPeer.class
 	rmic SuperPeer
+
+Peer_Stub.class: Peer.class
+	rmic Peer
 
 #
 # This target entry uses Suffix Replacement within a macro: 

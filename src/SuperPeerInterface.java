@@ -1,15 +1,16 @@
-import java.rmi.*;
 /**
  * @authors Bala Subrahmanyam Kambala, Daniel William DaCosta
  * @license GPLv3 (http://www.gnu.org/copyleft/gpl.html)
  * @descriptrion Remote Interface to the Super Peer.
  */
+import java.rmi.*;
+import java.rmi.server.*;
 public interface SuperPeerInterface extends Remote {
     /**
      * @return A NodeID.
      * @exception RemoteException if the remote invocation fails.
      */
-    public NodeID join() throws RemoteException;
+    public Key join() throws RemoteException,ServerNotActiveException;
     /**
      * Retrieves an Address from a NodeID.
      * @return An Address.
@@ -20,9 +21,9 @@ public interface SuperPeerInterface extends Remote {
      * @return The size of the finger table.
      * @exception RemoteException if the remote invocation fails.
      */
-    public int getFingerTableSize() throws RemoteException;
+    public int getFingerTableSize() throws RemoteException; 
 
-    public Address getAddress(NodeID id) throws RemoteException;
+    public String getAddress(Key id) throws RemoteException;
     /**
      * Retrieves all known nodes.
      * @todo This class needs to returns some mapping between NodeID's and Addresses.

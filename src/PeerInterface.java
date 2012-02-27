@@ -3,12 +3,14 @@
  * @license GPLv3 (http://www.gnu.org/copyleft/gpl.html)
  * @descriptrion Peer Interface
  */
+import java.rmi.*;
+import java.rmi.server.*;
 
 /**
  * @todo Everything
  */
-public interface PeerInterface
+public interface PeerInterface extends Remote
 {
 
-
+    public String getName() throws Exception;
 }
