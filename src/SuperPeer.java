@@ -44,20 +44,20 @@ public class SuperPeer extends UnicastRemoteObject implements SuperPeerInterface
     private HasherInterface hasher;
 
     /**
-     * The size of per node finger table.
+     * The m-bits
      */
-    private int fsize;
+    private int mbits;
 
     /**
      * @todo Everything
      */
-    SuperPeer (int _fsize) throws RemoteException, NoSuchAlgorithmException
+    SuperPeer (int _mbits) throws RemoteException, NoSuchAlgorithmException
     {
 	lg = new Logger("SuperPeer");
-	fsize = _fsize;
+	mbits = _mbits;
 	peertable = new HashMap<String,PeerInfo>();
 	prng = SecureRandom.getInstance("SHA1PRNG");
-	hasher = new SHA1Hasher();
+	hasher = new SHA1Hasher(2^mbits);
 	lg.log(Level.FINEST,"SuperPeer started.");
     }
 
@@ -86,7 +86,7 @@ public class SuperPeer extends UnicastRemoteObject implements SuperPeerInterface
     public HasherInterface getHasher() throws RemoteException
     {
 
-	return new SHA1Hasher();
+	return new SHA1Hasher(2^mbits);
     }
 
 
@@ -112,12 +112,12 @@ public class SuperPeer extends UnicastRemoteObject implements SuperPeerInterface
      */
     public static void main (String[] argv) 
     {
-	int fsize = 5;
+	int mbits = 8;
 	//Setup command line options
 	CommandLineParser parser = new BasicParser( );
 	Options options = new Options( );
 	options.addOption("h", "help", false, "Print this usage information.");
-	options.addOption("s", "fingertablesize", false, "The size of each peers finger table.");
+	options.addOption("m", "mbits", false, "The maximum number of unique keys in terms of 2^m (Default is "+Integer.toString(mbits)+").");
 
 	// Parse the program arguments
 	CommandLine commandLine;
@@ -132,11 +132,11 @@ public class SuperPeer extends UnicastRemoteObject implements SuperPeerInterface
 	    }
 	    if( commandLine.hasOption('s') ) {
 		//XXX:uncaught exception!
-		fsize = Integer.parseInt((commandLine.getOptionValue('s')));
+		mbits = Integer.parseInt((commandLine.getOptionValue('m')));
 	    }
 	    try 
 	    {
-		Naming.rebind ("SuperPeer", new SuperPeer (fsize));
+		Naming.rebind ("SuperPeer", new SuperPeer (mbits));
 	    } catch (Exception e) 
 	    {
 		System.out.println ("SuperPeer failed: " + e);

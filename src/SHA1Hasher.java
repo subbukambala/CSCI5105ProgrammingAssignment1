@@ -12,17 +12,27 @@ import java.io.Serializable;
 public class SHA1Hasher implements HasherInterface, Serializable
 {
     private MessageDigest sha;
-    public SHA1Hasher ()
+    private BigInteger ringsize;
+    public SHA1Hasher (int _ringsize)
     {
 	sha = null;
+	ringsize = new BigInteger(Integer.toString(_ringsize));
     }
+    /**
+     * @note MessageDigest is not serializable.  To get around this
+     * we ensure to initialize after it has been recieved.
+     */
     public Key getHash(String str) throws NoSuchAlgorithmException
     {
 	if(sha == null)
 	{
 	    sha = MessageDigest.getInstance("SHA-1");
 	}
-        return new Key(new BigInteger(sha.digest( str.getBytes() )).abs());
+        return 
+	    new Key
+	    (
+	     new BigInteger(sha.digest( str.getBytes() )).abs().mod(ringsize)
+	    );
     }
 
 }
