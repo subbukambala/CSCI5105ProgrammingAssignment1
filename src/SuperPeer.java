@@ -14,34 +14,36 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.security.SecureRandom;
 import java.security.NoSuchAlgorithmException;
+import java.lang.Math.*;
 
-public class SuperPeer extends UnicastRemoteObject implements SuperPeerInterface 
-{
-    /**
-     * Logger for SuperPeer.
-     */
-    private Logger lg;
+public class SuperPeer extends UnicastRemoteObject implements
+		SuperPeerInterface {
+	/**
+	 * Logger for SuperPeer.
+	 */
+	private Logger lg;
 
-    /**
-     * We would like node ID's to be unique. This table will be used 
-     * to ensure this.
-     */
-    private HashMap<String,PeerInfo> peertable;
+	/**
+	 * We would like node ID's to be unique. This table will be used to ensure
+	 * this.
+	 */
+	private List<FingerEntry> peertable;
 
+	/**
+	 * Random number generator for Node IDs.
+	 */
+	private SecureRandom prng;
 
-    /**
-     * Random number generator for Node IDs.
-     */
-    private SecureRandom prng;
-
-
-    /**
-     * SHA1 Hasher.
-     */
-    private HasherInterface hasher;
+	/**
+	 * SHA1 Hasher.
+	 */
+	private HasherInterface hasher;
 
     /**
      * The m-bits
@@ -55,57 +57,96 @@ public class SuperPeer extends UnicastRemoteObject implements SuperPeerInterface
     {
 	lg = new Logger("SuperPeer");
 	mbits = _mbits;
-	peertable = new HashMap<String,PeerInfo>();
+	peertable = new ArrayList<FingerEntry>();
 	prng = SecureRandom.getInstance("SHA1PRNG");
-	hasher = new SHA1Hasher(2^mbits);
+	hasher = new SHA1Hasher((int)Math.pow(2,mbits));
 	lg.log(Level.FINEST,"SuperPeer started.");
     }
 
-    /**
-     * @return A Key.
-     * @exception RemoteException if the remote invocation fails.
-     */
-    public Key join() throws RemoteException,ServerNotActiveException, NoSuchAlgorithmException
-    {
-	lg.log(Level.FINEST,"Join Called.");
-	Key rv;
-	synchronized(this)
-	{
-	    //XXX: ID collisions need to be detected using peertable!
-	    rv = hasher.getHash(new Integer(prng.nextInt()).toString());
-	    peertable.put(rv.toString(),new PeerInfo( RemoteServer.getClientHost()));
-	    lg.log(Level.FINEST,"Allocating Node ID "+rv.toString()+".");
-	}	
-	return rv;
-    }
 
-    
-    /**
-     * @return The Hasher class
-     */
-    public HasherInterface getHasher() throws RemoteException
-    {
+	/**
+	 * @return A Key.
+	 * @exception RemoteException
+	 *                if the remote invocation fails.
+	 */
+	public Key join() throws RemoteException, ServerNotActiveException,
+			NoSuchAlgorithmException {
+		lg.log(Level.FINEST, "Join Called.");
+		Key rv;
+		synchronized (this) {
+			// XXX: ID collisions need to be detected using peertable!
+			rv = hasher.getHash(new Integer(prng.nextInt()).toString());
+			peertable.add(new FingerEntry(rv, RemoteServer.getClientHost()));
+			lg.log(Level.FINEST, "Allocating Node ID " + rv.toString() + ".");
+		       
+		}
+		return rv;
+	}
 
-	return new SHA1Hasher(2^mbits);
-    }
+	/**
+	 * @return The Hasher class
+	 */
+	public HasherInterface getHasher() throws RemoteException {
+
+	    return new SHA1Hasher((int)Math.pow(2,mbits));
+	}
+
+	/**
+	 * Retrieves an Address from a Key.
+	 * 
+	 * @return A string containing an IP String Address.
+	 * @exception RemoteException
+	 *                if the remote invocation fails.
+	 */
+	public String getAddress(Key id) throws RemoteException {
+		lg.log(Level.FINER, "getAddress Called.");
+		FingerEntry fe = null;
+		
+		for (Integer i = 0; i < peertable.size(); i++) {
+		    lg.log(Level.FINEST, "getAddress - Checking " + peertable.get(i).getId().toString()+" for match ...");
+			if (peertable.get(i).getId().equals(id)) {
+			    lg.log(Level.FINEST, "getAddress - match found.");
+			    fe = peertable.get(i);
+			    break;
+			}
+		}
+		
+		if (fe == null) {
+			lg.log(Level.WARNING, "getAddress failed on " + id.toString()
+					+ ", returning null!");
+			return null;
+		} else
+			return fe.getIpAddress();
+	}
 
 
-    /**
-     * Retrieves an Address from a Key.
-     * @return A string containing an IP String Address.
-     * @exception RemoteException if the remote invocation fails.
-     */
-    public String getAddress(Key id) throws RemoteException
-    {
-	lg.log(Level.FINER,"getAddress Called.");
-	PeerInfo pi = peertable.get(id.toString());
-	if(pi == null) 
-	{
-	    lg.log(Level.WARNING,"getAddress failed on "+id.toString()+", returning null!");
+
+	/**
+	 * @todo Document
+	 */
+	public Key getSuccessor(Key key) throws RemoteException {
+		// TODO: Look up successor in peertable.
+		return null;
+	}
+
+	/**
+	 * @todo Document
+	 */
+    public FingerTable getInitialFingerTable(Key key) throws RemoteException,ServerNotActiveException {
+	FingerTable table = new FingerTable(key, RemoteServer.getClientHost());
+	/*    	    if (peertable.size() == 1) {
+		table.InitFingerTable();
+	    }
+	    else {
+		FingerEntry fe = peertable.get(peertable.size());
+
+		// XXX: Currently assigning its own key, IP
+		table.InitFingerTable(fe);
+		}*/
+
 	    return null;
-        }
-	else return pi.getIP();
-    }
+	}
+
 
     /**
      * @todo Everything
@@ -151,25 +192,4 @@ public class SuperPeer extends UnicastRemoteObject implements SuperPeerInterface
 	    System.exit(1);
 	}
     }
-
-    /**
-     * @todo Document
-     */
-    public Key getSuccessor(Key key)  throws RemoteException
-    {
-	//TODO: Look up successor in peertable.
-	return null;
-    }
-
-
-    /**
-     * @todo Document
-     */
-    public FingerTable getInitialFingerTable(Key key) throws RemoteException
-    {
-	//TODO: Implement and return an initial finger table based on
-	//provided key.
-	return null;
-    }
-
 }

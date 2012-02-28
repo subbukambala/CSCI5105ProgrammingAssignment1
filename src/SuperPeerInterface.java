@@ -40,7 +40,7 @@ public interface SuperPeerInterface extends Remote {
     /**
      * @todo Document
      */
-    public FingerTable getInitialFingerTable(Key key) throws RemoteException;
+    public FingerTable getInitialFingerTable(Key key) throws RemoteException,ServerNotActiveException;
 
 
 }
