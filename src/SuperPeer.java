@@ -15,7 +15,6 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 import java.util.HashMap;
-import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.security.NoSuchAlgorithmException;
 
@@ -66,29 +65,30 @@ public class SuperPeer extends UnicastRemoteObject implements SuperPeerInterface
      * @return A Key.
      * @exception RemoteException if the remote invocation fails.
      */
-    public Key join() throws RemoteException,ServerNotActiveException
+    public Key join() throws RemoteException,ServerNotActiveException, NoSuchAlgorithmException
     {
 	lg.log(Level.FINEST,"Join Called.");
 	Key rv;
 	synchronized(this)
 	{
-	    BigInteger bi = hasher.getHash(new Integer(prng.nextInt()).toString()).abs();
 	    //XXX: ID collisions need to be detected using peertable!
-	    rv = new Key(bi);
+	    rv = hasher.getHash(new Integer(prng.nextInt()).toString());
 	    peertable.put(rv.toString(),new PeerInfo( RemoteServer.getClientHost()));
 	    lg.log(Level.FINEST,"Allocating Node ID "+rv.toString()+".");
 	}	
 	return rv;
     }
 
-    /** 
-     * @return The size of the finger table.
-     * @exception RemoteException if the remote invocation fails.
+    
+    /**
+     * @return The Hasher class
      */
-    public int getFingerTableSize() throws RemoteException
+    public HasherInterface getHasher() throws RemoteException
     {
-	return fsize;
+
+	return new SHA1Hasher();
     }
+
 
     /**
      * Retrieves an Address from a Key.
@@ -105,17 +105,6 @@ public class SuperPeer extends UnicastRemoteObject implements SuperPeerInterface
 	    return null;
         }
 	else return pi.getIP();
-    }
-    /**
-     * Retrieves all known nodes.
-     * @todo This class needs to returns some mapping between Key's and Addresses.
-     * @return ???
-     * @exception RemoteException if the remote invocation fails.
-     */
-    public void getPeers() throws RemoteException
-    {
-	lg.log(Level.FINER,"getPeers Called.");
-	return;
     }
 
     /**
@@ -162,4 +151,25 @@ public class SuperPeer extends UnicastRemoteObject implements SuperPeerInterface
 	    System.exit(1);
 	}
     }
+
+    /**
+     * @todo Document
+     */
+    public Key getSuccessor(Key key)  throws RemoteException
+    {
+	//TODO: Look up successor in peertable.
+	return null;
+    }
+
+
+    /**
+     * @todo Document
+     */
+    public FingerTable getInitialFingerTable(Key key) throws RemoteException
+    {
+	//TODO: Implement and return an initial finger table based on
+	//provided key.
+	return null;
+    }
+
 }

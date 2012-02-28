@@ -43,6 +43,7 @@ CLASSES = \
 	HasherInterface.java \
 	SHA1Hasher.java \
 	Logger.java \
+	FingerTable.java \
         Key.java \
         SuperPeerInterface.java \
 	PeerInterface.java \

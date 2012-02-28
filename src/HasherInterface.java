@@ -3,9 +3,9 @@
  * @license GPLv3 (http://www.gnu.org/copyleft/gpl.html)
  * @descriptrion TBD
  */
-import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
 
-public interface HasherInterface 
+public interface HasherInterface
 {
-    public BigInteger getHash(String str);
+    public Key getHash(String str) throws NoSuchAlgorithmException;
 }

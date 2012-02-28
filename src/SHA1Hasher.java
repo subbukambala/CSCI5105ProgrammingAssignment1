@@ -7,17 +7,22 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.security.NoSuchAlgorithmException;
+import java.io.Serializable;
 
-public class SHA1Hasher implements HasherInterface
+public class SHA1Hasher implements HasherInterface, Serializable
 {
     private MessageDigest sha;
-    public SHA1Hasher () throws NoSuchAlgorithmException 
+    public SHA1Hasher ()
     {
-	sha = MessageDigest.getInstance("SHA-1");
+	sha = null;
     }
-    public BigInteger getHash(String str)
+    public Key getHash(String str) throws NoSuchAlgorithmException
     {
-        return new BigInteger(sha.digest( str.getBytes() ));
+	if(sha == null)
+	{
+	    sha = MessageDigest.getInstance("SHA-1");
+	}
+        return new Key(new BigInteger(sha.digest( str.getBytes() )).abs());
     }
 
 }

@@ -38,6 +38,12 @@ public class Peer extends UnicastRemoteObject implements PeerInterface
 
 
     /**
+     * The hash function that all peers use.
+     */
+    HasherInterface hasher;
+
+
+    /**
      * A cache to map Node ID's to IP.
      */
     HashMap<Key,PeerInterface> peercache;
@@ -49,15 +55,28 @@ public class Peer extends UnicastRemoteObject implements PeerInterface
     {
 	// Find the SuperPeer
        	superpeer = (SuperPeerInterface) Naming.lookup ("//"+sp+"/SuperPeer");
+
 	// Get this Peer's NodeID
 	nodeid = superpeer.join();
-	// Register with the RMI Registry.
-	Naming.rebind (nodeid.toString(),this);
-	//Initialize the node cache
-	peercache = new HashMap<Key,PeerInterface>();
+
 	// Initialize the Logger
 	lg = new Logger("Peer:"+nodeid.toString());
         lg.log(Level.FINEST,"Peer started.");
+
+	// Get Hasher object
+	lg.log(Level.FINEST,"Retrieving Hash object");
+	hasher = superpeer.getHasher();
+
+	// Register with the RMI Registry.
+	lg.log
+	(
+	 Level.FINEST,
+	 "Binding to local RMI registry with name "+nodeid.toString()
+	 );
+	Naming.rebind (nodeid.toString(),this);
+	
+	//Initialize the node cache
+	peercache = new HashMap<Key,PeerInterface>();
 
 	// TEST
 	lg.log(Level.FINEST,"Testing RMI self call of getName - "+getPeer(nodeid).getName());

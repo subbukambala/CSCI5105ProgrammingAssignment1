@@ -5,30 +5,42 @@
  */
 import java.rmi.*;
 import java.rmi.server.*;
+import java.security.NoSuchAlgorithmException;
+
 public interface SuperPeerInterface extends Remote {
     /**
      * @return A NodeID.
      * @exception RemoteException if the remote invocation fails.
      */
-    public Key join() throws RemoteException,ServerNotActiveException;
+    public Key join() throws RemoteException,ServerNotActiveException,NoSuchAlgorithmException;
     /**
      * Retrieves an Address from a NodeID.
      * @return An Address.
      * @exception RemoteException if the remote invocation fails.
      */
 
-    /** 
-     * @return The size of the finger table.
-     * @exception RemoteException if the remote invocation fails.
-     */
-    public int getFingerTableSize() throws RemoteException; 
-
-    public String getAddress(Key id) throws RemoteException;
     /**
-     * Retrieves all known nodes.
-     * @todo This class needs to returns some mapping between NodeID's and Addresses.
-     * @return ???
-     * @exception RemoteException if the remote invocation fails.
+     * @return The Hasher class
      */
-    public void getPeers() throws RemoteException;
+    public HasherInterface getHasher() throws RemoteException;
+
+
+    /**
+     * @todo Document
+     */
+    public String getAddress(Key id) throws RemoteException;
+
+
+    /**
+     * @todo Document
+     */
+    public Key getSuccessor(Key key)  throws RemoteException;
+
+
+    /**
+     * @todo Document
+     */
+    public FingerTable getInitialFingerTable(Key key) throws RemoteException;
+
+
 }
