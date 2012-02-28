@@ -3,6 +3,7 @@
  * @license GPLv3 (http://www.gnu.org/copyleft/gpl.html)
  * @descriptrion TBD
  */
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.io.Serializable;
 
@@ -10,7 +11,7 @@ public class Key implements Serializable
 {
 
     /**
-     * Internal respesentation of a Key is an integer.
+     * Internal representation of a Key is an integer.
      */
     private BigInteger id;
 
@@ -19,7 +20,7 @@ public class Key implements Serializable
      */
     public Key (BigInteger _id) 
     {
-	id = _id;
+    	id = _id;
     }
 
     
@@ -28,7 +29,7 @@ public class Key implements Serializable
      */
     public boolean equals(Key b)
     {
-	return (id == b.id);
+    	return (id == b.id);
     }
 
     /**
@@ -36,7 +37,8 @@ public class Key implements Serializable
      */
     public boolean less(Key b)
     {
-	return (id == b.id);
+    	// if Id is min then returns true.
+    	return (id.min(b.id) == id);
     }
 
     /**
@@ -44,7 +46,7 @@ public class Key implements Serializable
      */
     public String toString()
     {
-	return id.toString();
+    	return id.toString();
     }
 
 }

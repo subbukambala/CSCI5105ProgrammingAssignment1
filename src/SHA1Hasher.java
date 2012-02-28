@@ -11,18 +11,18 @@ import java.io.Serializable;
 
 public class SHA1Hasher implements HasherInterface, Serializable
 {
-    private MessageDigest sha;
-    public SHA1Hasher ()
-    {
-	sha = null;
-    }
-    public Key getHash(String str) throws NoSuchAlgorithmException
-    {
-	if(sha == null)
-	{
-	    sha = MessageDigest.getInstance("SHA-1");
+	private MessageDigest sha;
+
+	public SHA1Hasher() {
+		sha = null;
 	}
-        return new Key(new BigInteger(sha.digest( str.getBytes() )).abs());
-    }
+
+	public Key getHash(String str) throws NoSuchAlgorithmException {
+		if (sha == null) {
+			https: // subbukambala@github.com/chaosape/CSCI5105ProgrammingAssignment1.git
+			sha = MessageDigest.getInstance("SHA-1");
+		}
+		return new Key(new BigInteger(sha.digest(str.getBytes())).abs());
+	}
 
 }
