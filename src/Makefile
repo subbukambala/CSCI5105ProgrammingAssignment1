@@ -48,7 +48,8 @@ CLASSES = \
         SuperPeerInterface.java \
 	PeerInterface.java \
 	SuperPeer.java \
-	Peer.java
+	Peer.java \
+	CLI.java
 
 
 

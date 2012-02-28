@@ -10,5 +10,7 @@ scripts/RunSuperPeer.sh [This script is path agnostic]
 TO RUN PEER:
 scripts/RunPeer.sh [This script is path agnostic]
 
+TO RUN CLI: (NOTE: This is currently very basic)
+scripts/RunCLI.sh -l localhost [This script is path agnostic]
 
 Both will output some messages.

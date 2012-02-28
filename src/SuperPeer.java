@@ -148,6 +148,24 @@ public class SuperPeer extends UnicastRemoteObject implements
 	}
 
 
+
+
+    /**
+     * @todo Document
+     */
+    public String[][] getPeers() throws Exception
+    {
+	String [][] rv = new String[peertable.size()][2];
+	for (int i = 0; i < peertable.size(); i++) {
+	    lg.log(Level.FINEST, "getAddress - Checking " + peertable.get(i).getId().toString()+" for match ...");
+	    rv[i][0] = peertable.get(i).getId().toString();
+	    rv[i][1] = peertable.get(i).getIpAddress();
+	}
+	return rv;
+    }
+
+
+
     /**
      * @todo Everything
      */

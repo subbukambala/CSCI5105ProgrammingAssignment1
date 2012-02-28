@@ -43,4 +43,10 @@ public interface SuperPeerInterface extends Remote {
     public FingerTable getInitialFingerTable(Key key) throws RemoteException,ServerNotActiveException;
 
 
+    /**
+     * @todo Document
+     */
+    public String[][] getPeers() throws Exception;
+
+
 }
