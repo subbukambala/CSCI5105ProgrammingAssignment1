@@ -40,18 +40,18 @@ JC = javac
 #
 
 CLASSES = \
-	HasherInterface.java \
-	SHA1Hasher.java \
-	Logger.java \
+	CLI.java \
 	FingerTable.java \
+	FingerEntry.java \
+	HasherInterface.java \
         Key.java \
+	Logger.java \
+	SHA1Hasher.java \
+	SuperPeer.java \
         SuperPeerInterface.java \
 	PeerInterface.java \
-	SuperPeer.java \
 	Peer.java \
-	CLI.java
-
-
+	
 
 
 #

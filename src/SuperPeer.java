@@ -189,7 +189,7 @@ public class SuperPeer extends UnicastRemoteObject implements
 		helpFormatter.printHelp( "SuperPeer Usage:", "", options, "");
 		System.exit(0);
 	    }
-	    if( commandLine.hasOption('s') ) {
+	    if( commandLine.hasOption('m') ) {
 		//XXX:uncaught exception!
 		mbits = Integer.parseInt((commandLine.getOptionValue('m')));
 	    }
