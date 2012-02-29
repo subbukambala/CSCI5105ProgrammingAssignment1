@@ -40,6 +40,7 @@ JC = javac
 #
 
 CLASSES = \
+	ArgumentHandler.java \
 	CLI.java \
 	FingerTable.java \
 	FingerEntry.java \
