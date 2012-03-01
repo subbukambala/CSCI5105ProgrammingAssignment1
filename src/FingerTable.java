@@ -19,15 +19,6 @@ public class FingerTable implements Serializable
 	
 	FingerEntry myFingerEntry;
 	
-
-    public Key getSuccessor() { 
-	if ( myFingerEntry == null ) 
-	    return null; 
-	else 
-	    return myFingerEntry.getId();
-    }
-
-
 	public List<FingerEntry> table;
 	
 	/**
@@ -75,7 +66,10 @@ public class FingerTable implements Serializable
 	 */
     public void AddFingerEntry(FingerEntry fe) 
     {
-    	table.add(fe);
+    	if (! table.contains(fe)) {
+    		System.out.println("adding....");
+    		table.add(fe);
+    	}
     }
     
     /**
@@ -93,7 +87,7 @@ public class FingerTable implements Serializable
     {
     	for (Integer i = 0; i < table.size(); i++) {
     		LOG.log(Level.INFO, table.get(i).getId() + "\t" 
-    			+ table.get(i).getIpAddress() + "\n");
+    			+ table.get(i).getIpAddress() + "\t" + table.get(i).getStartWordKey().getId() + "\t" + table.get(i).getEndWordKey() + "\n");
     	}
     	
     } 

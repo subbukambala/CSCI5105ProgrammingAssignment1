@@ -4,6 +4,8 @@
  * @descriptrion Implements Peer Interface
  */
 
+import java.math.BigInteger;
+import java.net.MalformedURLException;
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.logging.Level;
@@ -25,34 +27,31 @@ import java.util.TimerTask;
 public class Peer extends UnicastRemoteObject implements PeerInterface {
 
 
+	private class Stabilize extends TimerTask {
 
-private class Stabilize extends TimerTask{
+		private Peer peer;
 
-    private Peer peer;
+		public Stabilize(Peer _peer) {
+			peer = _peer;
+		}
 
-    public Stabilize(Peer _peer){
-	peer = _peer;
-    }
+		public void run() {
+			peer.stabilize();
+		}
+	}
 
-    public void run() {
-	peer.stabilize();
-    }
-}
+	private class FixFinger extends TimerTask {
 
-private class FixFinger extends TimerTask{
+		private Peer peer;
 
-    private Peer peer;
+		public FixFinger(Peer _peer) {
+			peer = _peer;
+		}
 
-    public FixFinger(Peer _peer){
-	peer = _peer;
-    }
-
-    public void run() {
-	peer.fixFinger();
-    }
-}
-
-
+		public void run() {
+			peer.fixFinger();
+		}
+	}
 
 	/**
 	 * Logger for Peer.
@@ -79,24 +78,29 @@ private class FixFinger extends TimerTask{
 	 */
 	private HashMap<Key, PeerInterface> peercache;
 
-        /**
+	/**
+	 * My finger entry.
+	 */
+	private FingerEntry myFingerEntry;
+	
+    /**
 	 * Finger table.
 	 */
 	private FingerTable ft;
 	
 	private Map<String, String> dict;
 
-
-
     private Key pred;
     private Key succ;
     private Stabilize stabilizer;
     private FixFinger fingerFixer;
     private java.util.Timer timer;
+    
 	/**
 	 * @todo Everything
 	 */
 	public Peer(String sp) throws Exception {
+		try {
 	    pred = null;
 	    succ = null;
 		// Find the SuperPeer
@@ -126,35 +130,57 @@ private class FixFinger extends TimerTask{
 		// Initialize finger table
 		lg.log(Level.FINEST, "Getting initial finger table from superpeer");
 		ft = superpeer.getInitialFingerTable(nodeid);
-		succ = ft.getSuccessor();
+		
+		succ = getSuccessor(nodeid);
 
 		// Notify Successor.
-		if(succ!=null) getPeer(succ).notify(nodeid);
+		if(succ != null) {
+			getPeer(succ).notify(nodeid);
+		}
 		
-
-
-		timer = new java.util.Timer();
+		int mbits = superpeer.getChordKeyBitsSize();
+		
+		System.out.println("++++++++++ size of mbits" + mbits);
+		updateFingerTable(mbits);
+		System.out.println("2.4");
+		
+		/*timer = new java.util.Timer();
 		stabilizer = new Stabilize(this);
 		timer.schedule(stabilizer, 0, 20000);
 
 		fingerFixer = new FixFinger(this);
 		timer.schedule(fingerFixer, 0, 5000);
-		
+		 */		
 
 		// TEST
+//		lg.log(Level.FINEST, "Testing RMI self call of getName 3- " + getPeer(nodeid).getName());
+		
 		lg.log(Level.FINEST,
-				"Testing RMI self call of getName - "
-						+ getPeer(nodeid).getName());
+				"Done...");
 		// TEST
 		// superpeer.getPeers();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private PeerInterface getPeer(Key node) throws Exception {
+		
 		PeerInterface peer = peercache.get(node);
+		
+		try {
 		if (peer == null) {
-			peer = (PeerInterface) Naming.lookup("//"
-					+ superpeer.getAddress(node) + "/" + node.toString());
-			peercache.put(node, peer);
+			if (superpeer.getNodeServiceAddress(node) != null) {
+				peer = (PeerInterface) Naming.lookup("//"
+						+ superpeer.getNodeServiceAddress(node));
+			
+				peercache.put(node, peer);
+			}
+		}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
 		}
 		return peer;
 	}
@@ -164,24 +190,25 @@ private class FixFinger extends TimerTask{
 
 	}
 
+	@Override
+	public Key getSuccessor(Key key) throws RemoteException {
+		if (succ == null) {
+			return null;
+		}
+		
+		if (nodeid.leq(key) && key.leq(succ) && !key.equals(succ)) {
+			return succ;
+		} else {
+			try {
+				return getPeer(succ).getSuccessor(key);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 
-    /** 
-     * @return Null if this peer is the owner, otherwise it returns
-     * the next applicable node in the finger table.
-     */
-    public Key getSuccessor(Key key) throws Exception
-    {
-       
-	if(nodeid.leq(key) && key.leq(succ) && !key.equals(succ)) {
-	    return succ;
+		return null;
 	}
-	else {
-	    // XXX: implement
-	    //Key peer = ft.getClosestPreceedingNode(key);
-	    //return getPeer(peer).getSuccessor(key);
-	    return null;
-       }
-    }
 
     /**
      * @todo Everything.
@@ -204,8 +231,154 @@ private class FixFinger extends TimerTask{
 	lg.log(Level.FINEST, "fixFinger called.");
 	return;
     }
+    
+    public void updatePredecessor(Key key) throws RemoteException
+    {
+    	pred = key;
+    }
+    
+    public void updateSuccessor(Key key) throws RemoteException
+    {
+    	succ = key;
+    }    	
+    
+	public FingerEntry getFingerEntry() throws RemoteException
+	{
+		FingerEntry fe = null;
+		try {
 
+			if (myFingerEntry != null) {
+				return myFingerEntry;
+			}
+			fe = new FingerEntry();
 
+			fe.setId(nodeid);
+
+			fe.setIpAddress(RemoteServer.getClientHost());
+
+			BigInteger prevEndId = BigInteger.ZERO;
+
+			prevEndId = getPeer(pred).getFingerEntry().getEndWordKey().getId();
+
+			Key endKey = new Key(prevEndId.add(BigInteger.ONE));
+
+			fe.setStartWordKey(endKey);
+
+			fe.setEndWordKey(nodeid);
+
+		} catch (ServerNotActiveException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return fe;
+	}
+    
+    /**
+     * New node calls this method to update notify successor
+     * 
+     * @throws RemoteException
+     */
+    private void notifySuccessor() throws RemoteException 
+    {
+    	try {
+			PeerInterface peer = (PeerInterface) Naming.lookup("//"
+					+ superpeer.getNodeServiceAddress(succ));
+			
+			peer.updatePredecessor(nodeid);
+			
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NotBoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+    
+    /**
+     * New node calls this method to update notify predecessor
+     * 
+     * @throws RemoteException
+     */
+    private void notifyPredecessor() throws RemoteException 
+    {
+    	try {
+			PeerInterface peer = (PeerInterface) Naming.lookup("//"
+					+ superpeer.getNodeServiceAddress(pred));
+			
+			peer.updateSuccessor(nodeid);
+			
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NotBoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+    
+    @Override
+	public void updateFingerTable(int mbits) throws RemoteException
+	{
+    	// crude way of constructing finger table for each node again.
+		try {
+			constructFingerTable(mbits);
+
+			if (succ != null) {
+				getPeer(succ).updateFingerTable(mbits);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.out.println("1");
+		}
+	}
+
+	public void constructFingerTable(int mbits) 
+	{
+		try {
+			for (int i = 1; i < mbits; i++) {
+				System.out.println("1...");
+				FingerEntry fe = new FingerEntry();
+				fe.setId(nodeid);
+				int fingerId = (nodeid.getId().intValue() + 
+						(int) Math.pow(2, i - 1)) % (int) (Math.pow(2, mbits));
+				fe.setStartWordKey(new Key(BigInteger.ZERO));
+				fe.setEndWordKey(new Key(BigInteger.valueOf((long)Math.pow(2, mbits) - 1)));
+				fe.setIpAddress(superpeer.getAddress(nodeid));
+
+				Key key = new Key(BigInteger.valueOf(fingerId));
+				Key succNode = null;
+
+				succNode = getSuccessor(key);
+
+				if (succNode == null) {
+					ft.AddFingerEntry(fe);
+				} 
+				else {
+					ft.AddFingerEntry(getPeer(succNode).getFingerEntry());
+				}
+			}
+			
+			lg.log(Level.FINEST, "Logging *************2**" + ft.table.size());
+			
+
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+    
     /** 
      * @return Null if this peer is the owner, otherwise it returns
      * the next applicable node in the finger table.
@@ -219,21 +392,26 @@ private class FixFinger extends TimerTask{
     @Override
     public String lookup(String word, Level logLevel) throws Exception
     {
-    	if (dict.get(word) != null) {
-    		return dict.get(word); 
+    	lg.log(Level.FINEST, "In lookup method");
+    	
+    	Key key = hasher.getHash(word);
+    	
+    	lg.log(Level.FINEST, " Hashed word key: " + key);
+    	
+    	if (getSuccessor(key) == null) {
+    		lg.log(Level.FINEST, " Successor of key is requested node: " + nodeid);
+        	return dict.get(word);
     	}
     	else {
-    		Key key = hasher.getHash(word);
-        	
-        	for (Integer i = 0; i < ft.table.size(); i++) {
+    		for (Integer i = 0; i < ft.table.size(); i++) {
         		FingerEntry fe = ft.table.get(i);
         		
         		// If key lies in range
-        		if ((fe.getStartWordKey().less(key) &&
-            			key.less(fe.getEndWordKey())) || (i == ft.table.size() -1)) 
+        		if ((fe.getStartWordKey().leq(key) &&
+            			key.leq(fe.getEndWordKey())) || (i == ft.table.size() -1)) 
         		{
         			PeerInterface peer = (PeerInterface) Naming.lookup("//"
-        					+ ft.table.get(i).getIpAddress() + "/" + ft.table.get(i).getId());
+        					+ superpeer.getNodeServiceAddress(ft.table.get(i).getId()));
 
         			// Based on log level, prints path.
         			lg.log(logLevel, nodeid + " ");
@@ -252,18 +430,32 @@ private class FixFinger extends TimerTask{
      */
     public boolean insert(String word, String def, Level logLevel) throws Exception
     {
+    	lg.log(Level.FINEST, "In insert method");
+    	
+    	
     	Key key = hasher.getHash(word);
+    	
+    	lg.log(Level.FINEST, " Hashed word key: " + key);
+    	
+    	if (getSuccessor(key) == null) {
+    		lg.log(Level.FINEST, " Successor of key is requested node: " + nodeid);
+        	dict.put(word, def);
+    		return true;
+    	}
+    	
     	
     	for (Integer i = 0; i < ft.table.size(); i++) {
     		// If key lies in range
     		FingerEntry fe = ft.table.get(i); 
-    		if ((fe.getStartWordKey().less(key) &&
-    			key.less(fe.getEndWordKey())) || (i == ft.table.size() -1)) 
+    		
+    		if ((fe.getStartWordKey().leq(key) &&
+    			key.leq(fe.getEndWordKey())) || (i == ft.table.size() -1)) 
     		{
-    			PeerInterface peer = (PeerInterface) Naming.lookup("//"
-    					+ ft.table.get(i).getIpAddress() + "/" + ft.table.get(i).getId());
     			
-    			// Based on log level, prints path
+    			PeerInterface peer = (PeerInterface) Naming.lookup("//"
+    					+  superpeer.getNodeServiceAddress(ft.table.get(i).getId()));
+    			
+    			// XXX:: Based on log level, prints path
     			lg.log(logLevel, nodeid + " ");
     			
     			return peer.insert(word, def, logLevel);

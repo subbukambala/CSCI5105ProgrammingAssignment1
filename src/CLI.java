@@ -79,6 +79,38 @@ public class CLI {
 			}
 			// call lookup RMI service to find a meaning of word.
 			System.out.println(word + "...word");
+			
+			
+			
+			SuperPeerInterface superpeer;
+			try {
+				superpeer = (SuperPeerInterface) Naming
+				.lookup("//" + commandLine.getArgs()[0] + "/SuperPeer");
+			
+
+				String nodeService = superpeer.getNodeServiceAddress();
+				PeerInterface peer = (PeerInterface) Naming.lookup("//"
+						+ nodeService);
+			
+				
+				String meaning = peer.lookup(word, Level.INFO);
+				System.out.println(meaning);
+			
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NotBoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}  catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
 			System.exit(0);
 		}
 		if (commandLine.hasOption('f')) {

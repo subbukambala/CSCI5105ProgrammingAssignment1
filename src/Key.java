@@ -23,6 +23,10 @@ public class Key implements Serializable
     	id = _id;
     }
 
+    public BigInteger getId()
+    {
+    	return id;
+    }
     
     /**
      * Check if two Keys are equal.
@@ -35,17 +39,10 @@ public class Key implements Serializable
     /**
      * Check id is less than b
      */
-    public boolean less(Key b)
-    {
-    	return (id.compareTo(b.id) <= 0);
-    }
-
-
     public boolean leq(Key b)
     {
-	return id.compareTo(b.id)<=0;
-	
-    }
+    	return id.compareTo(b.id)<=0;
+	}
 
     /**
      * Convert this Key to a String.
