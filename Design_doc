@@ -17,6 +17,7 @@ Questions:
 
 Implementation details:
 -----------------------
+Randomly generating a key instead of using IPadress. Because, while testing in a single machine, hashing IP address is not appropriate.
 
 
 Assumption:
