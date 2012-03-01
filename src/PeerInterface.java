@@ -18,8 +18,7 @@ public interface PeerInterface extends Remote
      */
     public String getName() throws Exception;
     /** 
-     * @return Null if this peer is the owner, otherwise it returns
-     * the next applicable node in the finger table.
+     * @return Return the key of the owner of the input key.
      */
     public Key getOwner(Key key) throws Exception;
     
@@ -41,10 +40,18 @@ public interface PeerInterface extends Remote
      * peer.
      */
     public String[][] getEntries() throws Exception;
-    
+
+    /**
+     * @todo Everything.
+     */
+    public void notify(Key key) throws Exception;
+
+        
     /**
      * This method is used to print node's internal data such as Key, Finger Table, 
      * No of words.
      */
     public void printData() throws Exception;
+    
+    
 }

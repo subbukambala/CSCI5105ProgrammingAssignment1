@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * @todo Everything..
  */
-public class FingerEntry {
+public class FingerEntry implements Serializable{
 	private Key id;
 	private String ipAddress;
 	private Key startWordKey;

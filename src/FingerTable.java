@@ -19,6 +19,15 @@ public class FingerTable implements Serializable
 	
 	FingerEntry myFingerEntry;
 	
+
+    public Key getSuccessor() { 
+	if ( myFingerEntry == null ) 
+	    return null; 
+	else 
+	    return myFingerEntry.getId();
+    }
+
+
 	public List<FingerEntry> table;
 	
 	/**
