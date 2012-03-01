@@ -24,16 +24,16 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 
 
 
-private class Stablize extends TimerTask{
+private class Stabilize extends TimerTask{
 
     private Peer peer;
 
-    public Stablize(Peer _peer){
+    public Stabilize(Peer _peer){
 	peer = _peer;
     }
 
     public void run() {
-	peer.stablize();
+	peer.stabilize();
     }
 }
 
@@ -86,7 +86,7 @@ private class FixFinger extends TimerTask{
 
     private Key pred;
     private Key succ;
-    private Stablize stablizer;
+    private Stabilize stabilizer;
     private FixFinger fingerFixer;
     private java.util.Timer timer;
 	/**
@@ -129,8 +129,8 @@ private class FixFinger extends TimerTask{
 
 
 		timer = new java.util.Timer();
-		stablizer = new Stablize(this);
-		timer.schedule(stablizer, 0, 20000);
+		stabilizer = new Stabilize(this);
+		timer.schedule(stabilizer, 0, 20000);
 
 		fingerFixer = new FixFinger(this);
 		timer.schedule(fingerFixer, 0, 5000);
@@ -171,8 +171,10 @@ private class FixFinger extends TimerTask{
 	    return succ;
 	}
 	else {
-	    Key peer = ft.getClosestPreceedingNode(key);
-	    return getPeer(peer).getSuccessor(key);
+	    // XXX: implement
+	    //Key peer = ft.getClosestPreceedingNode(key);
+	    //return getPeer(peer).getSuccessor(key);
+	    return null;
        }
     }
 
@@ -188,8 +190,8 @@ private class FixFinger extends TimerTask{
     }
 
 
-    public void stablize() {
-	lg.log(Level.FINEST, "stablize called.");
+    public void stabilize() {
+	lg.log(Level.FINEST, "stabilize called.");
 	return;
     }
 
