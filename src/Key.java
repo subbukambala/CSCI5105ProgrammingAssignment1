@@ -32,6 +32,13 @@ public class Key implements Serializable
     	return (id.equals(b.id));
     }
 
+
+    public boolean leq(Key b)
+    {
+	return id.compareTo(b.id)<=0;
+	
+    }
+
     /**
      * Convert this Key to a String.
      */

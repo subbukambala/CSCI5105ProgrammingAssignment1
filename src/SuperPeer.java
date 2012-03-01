@@ -45,11 +45,12 @@ public class SuperPeer extends UnicastRemoteObject implements
 	 */
 	private HasherInterface hasher;
 
+
+
     /**
      * The m-bits
      */
     private int mbits;
-
     /**
      * @todo Everything
      */
@@ -101,51 +102,38 @@ public class SuperPeer extends UnicastRemoteObject implements
 	public String getAddress(Key id) throws RemoteException {
 		lg.log(Level.FINER, "getAddress Called.");
 		FingerEntry fe = null;
-		
-		for (Integer i = 0; i < peertable.size(); i++) {
-		    lg.log(Level.FINEST, "getAddress - Checking " + peertable.get(i).getId().toString()+" for match ...");
+		synchronized (this) {
+		    for (Integer i = 0; i < peertable.size(); i++) {
+			lg.log(Level.FINEST, "getAddress - Checking " + peertable.get(i).getId().toString()+" for match ...");
 			if (peertable.get(i).getId().equals(id)) {
 			    lg.log(Level.FINEST, "getAddress - match found.");
 			    fe = peertable.get(i);
-			    break;
+			    return fe.getIpAddress();
 			}
+		    }
 		}
-		
-		if (fe == null) {
-			lg.log(Level.WARNING, "getAddress failed on " + id.toString()
-					+ ", returning null!");
-			return null;
-		} else
-			return fe.getIpAddress();
-	}
-
-
-
-	/**
-	 * @todo Document
-	 */
-	public Key getSuccessor(Key key) throws RemoteException {
-		// TODO: Look up successor in peertable.
+		lg.log(Level.WARNING, "getAddress failed on " + id.toString()
+		       + ", returning null!");
 		return null;
 	}
+
 
 	/**
 	 * @todo Document
 	 */
     public FingerTable getInitialFingerTable(Key key) throws RemoteException,ServerNotActiveException {
 	FingerTable table = new FingerTable(key, RemoteServer.getClientHost());
-	/*    	    if (peertable.size() == 1) {
-		table.InitFingerTable();
-	    }
-	    else {
-		FingerEntry fe = peertable.get(peertable.size());
-
-		// XXX: Currently assigning its own key, IP
-		table.InitFingerTable(fe);
-		}*/
-
-	    return null;
+	if (peertable.size() == 1) {
+	    table.InitFingerTable();
 	}
+	else {
+	    synchronized(this) {
+		FingerEntry fe = peertable.get(peertable.size()-1);
+		table.InitFingerTable(fe);
+	    }
+	}
+	return table;
+    }
 
 
 
@@ -163,6 +151,7 @@ public class SuperPeer extends UnicastRemoteObject implements
 	}
 	return rv;
     }
+
 
 
 

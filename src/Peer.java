@@ -15,11 +15,43 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
+import java.util.TimerTask;
 
 /**
  * @todo Everything
  */
 public class Peer extends UnicastRemoteObject implements PeerInterface {
+
+
+
+private class Stablize extends TimerTask{
+
+    private Peer peer;
+
+    public Stablize(Peer _peer){
+	peer = _peer;
+    }
+
+    public void run() {
+	peer.stablize();
+    }
+}
+
+private class FixFinger extends TimerTask{
+
+    private Peer peer;
+
+    public FixFinger(Peer _peer){
+	peer = _peer;
+    }
+
+    public void run() {
+	peer.fixFinger();
+    }
+}
+
+
+
 	/**
 	 * Logger for Peer.
 	 */
@@ -28,32 +60,41 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 	/**
 	 * This peer's NodeID.
 	 */
-	Key nodeid;
+	private Key nodeid;
 
 	/**
 	 * SuperPeer
 	 */
-	SuperPeerInterface superpeer;
+	private SuperPeerInterface superpeer;
 
 	/**
 	 * The hash function that all peers use.
 	 */
-	HasherInterface hasher;
+	private HasherInterface hasher;
 
 	/**
 	 * A cache to map Node ID's to IP.
 	 */
-	HashMap<Key, PeerInterface> peercache;
+	private HashMap<Key, PeerInterface> peercache;
 
         /**
 	 * Finger table.
 	 */
-    FingerTable ft;
-    
+         FingerTable ft;
+
+
+
+    private Key pred;
+    private Key succ;
+    private Stablize stablizer;
+    private FixFinger fingerFixer;
+    private java.util.Timer timer;
 	/**
 	 * @todo Everything
 	 */
 	public Peer(String sp) throws Exception {
+	    pred = null;
+	    succ = null;
 		// Find the SuperPeer
 		superpeer = (SuperPeerInterface) Naming
 				.lookup("//" + sp + "/SuperPeer");
@@ -77,11 +118,24 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		// Initialize the node cache
 		peercache = new HashMap<Key, PeerInterface>();
 
-
 		// Initialize finger table
 		lg.log(Level.FINEST, "Getting initial finger table from superpeer");
 		ft = superpeer.getInitialFingerTable(nodeid);
+		succ = ft.getSuccessor();
+
+		// Notify Successor.
+		if(succ!=null) getPeer(succ).notify(nodeid);
 		
+
+
+		timer = new java.util.Timer();
+		stablizer = new Stablize(this);
+		timer.schedule(stablizer, 0, 20000);
+
+		fingerFixer = new FixFinger(this);
+		timer.schedule(fingerFixer, 0, 5000);
+		
+
 		// TEST
 		lg.log(Level.FINEST,
 				"Testing RMI self call of getName - "
@@ -104,6 +158,45 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		return ("Peer-" + nodeid.toString());
 
 	}
+
+
+    /** 
+     * @return Null if this peer is the owner, otherwise it returns
+     * the next applicable node in the finger table.
+     */
+    public Key getSuccessor(Key key) throws Exception
+    {
+       
+	if(nodeid.leq(key) && key.leq(succ) && !key.equals(succ)) {
+	    return succ;
+	}
+	else {
+	    Key peer = ft.getClosestPreceedingNode(key);
+	    return getPeer(peer).getSuccessor(key);
+       }
+    }
+
+    /**
+     * @todo Everything.
+     */
+    public void notify(Key key) throws Exception
+    {
+	lg.log(Level.FINEST, "Peer-"+key.toString()+" is now our predecssor.");
+	if(pred == null || (pred.leq(key) && key.leq(nodeid))) {
+	    pred = key;
+	}
+    }
+
+
+    public void stablize() {
+	lg.log(Level.FINEST, "stablize called.");
+	return;
+    }
+
+    public void fixFinger() {
+	lg.log(Level.FINEST, "fixFinger called.");
+	return;
+    }
 
 
     /** 

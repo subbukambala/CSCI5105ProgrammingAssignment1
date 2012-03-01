@@ -34,12 +34,6 @@ public interface SuperPeerInterface extends Remote {
     /**
      * @todo Document
      */
-    public Key getSuccessor(Key key)  throws RemoteException;
-
-
-    /**
-     * @todo Document
-     */
     public FingerTable getInitialFingerTable(Key key) throws RemoteException,ServerNotActiveException;
 
 
