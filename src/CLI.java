@@ -9,7 +9,9 @@ import java.util.Map;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.logging.Level;
@@ -26,6 +28,8 @@ import org.apache.commons.cli.HelpFormatter;
  */
 public class CLI {
 
+	private static final Logger LOG = new Logger("CLI");
+	
     /**
      * @todo Everything
      */
@@ -67,41 +71,70 @@ public class CLI {
 	    }
 	    System.exit(0);
 	}
-	if( commandLine.hasOption('l') ) {
-	    String word = commandLine.getOptionValue('l');
-	    if ( word == null ) {
-		cli.usage("\nNo word provided!\n");
-		System.exit(1);
-	    }
-	    // call lookup RMI service to find a meaning of word.
-	    System.out.println(word + "...word");
-	    System.exit(0);
-	}
-	if( commandLine.hasOption('f') ) {
-	    String filePath = commandLine.getOptionValue( 'f' );
-	    if (filePath == null ) {
-		cli.usage("\nNo file provided!\n");
-		System.exit(1);
-	    }
-		
-	    // XXX:: call lookup RMI service to find a meaning of a word.
-	    System.out.println(filePath + "... file path");
-	    Map<String, String> dict = null;
-	    try {
-		dict = CLI.readFile(filePath);
-	    } catch (Exception e) {
-		cli.usage("\nError opening file!\n");
-		System.exit(1);
-	    }
+		if (commandLine.hasOption('l')) {
+			String word = commandLine.getOptionValue('l');
+			if (word == null) {
+				cli.usage("\nNo word provided!\n");
+				System.exit(1);
+			}
+			// call lookup RMI service to find a meaning of word.
+			System.out.println(word + "...word");
+			System.exit(0);
+		}
+		if (commandLine.hasOption('f')) {
+			try {
+				String filePath = commandLine.getOptionValue('f');
+				if (filePath == null) {
+					cli.usage("\nNo file provided!\n");
+					System.exit(1);
+				}
 
-	    Iterator it = dict.entrySet().iterator();
-	    while (it.hasNext()) {
-		Map.Entry pairs = (Map.Entry)it.next();
-		System.out.println(pairs.getKey() + " = " + pairs.getValue());
-		// XXX::  call insert RMI service to insert a meaning of a word
-	    }
-	    System.exit(0);
-	}
+				LOG.log(Level.FINEST, "File path: " + filePath);
+				Map<String, String> dict = null;
+
+				dict = CLI.readFile(filePath);
+
+				SuperPeerInterface superpeer = (SuperPeerInterface) Naming
+						.lookup("//" + commandLine.getArgs()[0] + "/SuperPeer");
+
+				String nodeService = superpeer.getNodeServiceAddress();
+				PeerInterface peer = (PeerInterface) Naming.lookup("//"
+						+ nodeService);
+
+				Iterator it = dict.entrySet().iterator();
+				while (it.hasNext()) {
+					Map.Entry pairs = (Map.Entry) it.next();
+					System.out.println(pairs.getKey() + " = "
+							+ pairs.getValue());
+
+					// XXX:: logging option should be provided by user
+					peer.insert(pairs.getKey().toString(), pairs.getValue()
+							.toString(), Level.INFO);
+				}
+				System.exit(0);
+
+			} catch (FileNotFoundException fne) {
+
+				fne.printStackTrace();
+				cli.usage("\nError opening file!\n");
+				System.exit(1);
+
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NotBoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (Exception e) {
+
+				e.printStackTrace();
+				cli.usage("\nError in input file processing!\n");
+				System.exit(1);
+			}
+		}
 	
 	cli.usage("\nNo directive provided!\n");
 	System.exit(1);
@@ -109,26 +142,31 @@ public class CLI {
 	
     }
 
-    public static Map<String, String> readFile(String fileName) throws Exception {
+	public static Map<String, String> readFile(String fileName)
+			throws Exception {
 
-	Map<String, String> dict = new HashMap<String, String> (); 
-	// Open the file that is the first
-	// command line parameter
-	FileInputStream fstream = new FileInputStream(fileName);
-	// Get the object of DataInputStream
-	DataInputStream in = new DataInputStream(fstream);
-	BufferedReader br = new BufferedReader(new InputStreamReader(in));
-	String strLine;
-	// Read File Line By Line
-	while ((strLine = br.readLine()) != null) {
-	    // Print the content on the console
-	    String words[] = strLine.split(":");
-	    dict.put(words[0].trim(), words[1].trim());
-	    System.out.println(strLine);
+		Map<String, String> dict = new HashMap<String, String>();
+		// Open the file that is the first
+		// command line parameter
+		FileInputStream fstream = new FileInputStream(fileName);
+		
+		// Get the object of DataInputStream
+		DataInputStream in = new DataInputStream(fstream);
+		BufferedReader br = new BufferedReader(new InputStreamReader(in));
+		String strLine;
+		
+		// Read File Line By Line
+		while ((strLine = br.readLine()) != null) {
+			
+			// Assuming word is always separated with :
+			if (strLine.contains(":")) {
+				String words[] = strLine.split(":");
+				dict.put(words[0].trim(), words[1].trim());
+			}
+		}
+		// Close the input stream
+		in.close();
+		return dict;
 	}
-	// Close the input stream
-	in.close();
-	return dict;
-    }
 
 }

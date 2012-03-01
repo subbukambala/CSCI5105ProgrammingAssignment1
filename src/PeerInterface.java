@@ -5,6 +5,7 @@
  */
 import java.rmi.*;
 import java.rmi.server.*;
+import java.util.logging.Level;
 
 /**
  * @todo Everything
@@ -21,20 +22,29 @@ public interface PeerInterface extends Remote
      * the next applicable node in the finger table.
      */
     public Key getOwner(Key key) throws Exception;
+    
     /**
-     * @return If this peer owns the definition for this word 
-     * the definition is returned as a string. In any other case null is
-     * returned.
+     * This method looks for a key in whole DHT recursively.
+     * 
+     * @return meaning of a given word.
      */
-    public String getDef(String word) throws Exception;
+    public String lookup(String word, Level logLevel) throws Exception;
+    
     /**
      * @return True if this peer has added the word successfully.
      * False otherwise.
      */
-    public boolean addDef(String word,String def) throws Exception;
+    public boolean insert(String word, String def, Level logLevel) throws Exception;
+    
     /**
      * @return A table of all words and definitions stored in this
      * peer.
      */
     public String[][] getEntries() throws Exception;
+    
+    /**
+     * This method is used to print node's internal data such as Key, Finger Table, 
+     * No of words.
+     */
+    public void printData() throws Exception;
 }

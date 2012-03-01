@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 /**
  * @todo Everything
@@ -14,6 +15,7 @@ import java.util.List;
 public class FingerTable implements Serializable
 {
 	
+	private static final Logger LOG = new Logger("FingerTable");
 	
 	FingerEntry myFingerEntry;
 	
@@ -27,7 +29,7 @@ public class FingerTable implements Serializable
 	 */
 	public FingerTable(Key id, String ipAddress)
 	{
-	    myFingerEntry = new FingerEntry();
+		myFingerEntry = new FingerEntry();
 		myFingerEntry.setId(id);
 		myFingerEntry.setIpAddress(ipAddress);
 	}
@@ -73,5 +75,17 @@ public class FingerTable implements Serializable
     public void InitFingerTable() 
     {
     	table = new ArrayList<FingerEntry> ();
+    } 
+    
+    /**
+     * Prints finger table
+     */
+    public void PrintFingerTable() 
+    {
+    	for (Integer i = 0; i < table.size(); i++) {
+    		LOG.log(Level.INFO, table.get(i).getId() + "\t" 
+    			+ table.get(i).getIpAddress() + "\n");
+    	}
+    	
     } 
 }

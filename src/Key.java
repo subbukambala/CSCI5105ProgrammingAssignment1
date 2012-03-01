@@ -31,6 +31,14 @@ public class Key implements Serializable
     {
     	return (id.equals(b.id));
     }
+    
+    /**
+     * Check id is less than b
+     */
+    public boolean less(Key b)
+    {
+    	return (id.compareTo(b.id) <= 0);
+    }
 
     /**
      * Convert this Key to a String.

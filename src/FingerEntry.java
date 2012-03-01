@@ -14,8 +14,8 @@ import java.util.List;
 public class FingerEntry {
 	private Key id;
 	private String ipAddress;
-	private Integer startWordKey;
-	private Integer endWordKey;
+	private Key startWordKey;
+	private Key endWordKey;
 
 	public FingerEntry() {	}
 	
@@ -41,20 +41,19 @@ public class FingerEntry {
 		this.ipAddress = ipAddress;
 	}
 
-	public Integer getStartWordKey() {
-		return startWordKey;
-	}
-
-	public void setStartWordKey(Integer startWordKey) {
+	public void setStartWordKey(Key startWordKey) {
 		this.startWordKey = startWordKey;
 	}
 
-	public Integer getEndWordKey() {
-		return endWordKey;
-	}
-
-	public void setEndWordKey(Integer endWordKey) {
+	public void setEndWordKey(Key endWordKey) {
 		this.endWordKey = endWordKey;
 	}
+	
+	public Key getStartWordKey() {
+		return startWordKey;
+	}
 
+	public Key getEndWordKey() {
+		return endWordKey;
+	}
 }
