@@ -152,7 +152,14 @@ public class SuperPeer extends UnicastRemoteObject implements
 	return rv;
     }
 
-
+    @Override
+    public String getNodeServiceAddress()  throws RemoteException
+    {
+    	int random = (int)(peertable.size() + (Math.random() * 37)) % peertable.size();
+    	
+    	//Service is uniquely identified by IP address and node ID
+    	return peertable.get(random).getIpAddress() + "/" + peertable.get(random).getId();
+    }
 
 
     /**

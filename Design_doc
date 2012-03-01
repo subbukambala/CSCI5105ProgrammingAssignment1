@@ -1,0 +1,25 @@
+ToDo:
+-----
+Make sure super peer accepts only one node join at a time
+(super peer should return DONE on join [as per assignment document])
+
+Points:
+-------
+Client knows only super peer address
+we should run superpeer script from src dir. Isn't it?
+
+
+Questions:
+----------
+1) Should we need to give peer/super peer option in command line?
+
+
+
+Implementation details:
+-----------------------
+Randomly generating a key instead of using IPadress. Because, while testing in a single machine, hashing IP address is not appropriate.
+
+
+Assumption:
+----------
+1) Word and its meaning is separated with :

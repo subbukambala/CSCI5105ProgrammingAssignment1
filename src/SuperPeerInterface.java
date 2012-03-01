@@ -34,6 +34,10 @@ public interface SuperPeerInterface extends Remote {
     /**
      * @todo Document
      */
+    /**
+     * Returns a node service address (IPAddress + Node ID) 
+     */
+    public String getNodeServiceAddress()  throws RemoteException;
     public FingerTable getInitialFingerTable(Key key) throws RemoteException,ServerNotActiveException;
 
 

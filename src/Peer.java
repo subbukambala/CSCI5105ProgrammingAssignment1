@@ -8,6 +8,8 @@ import java.rmi.*;
 import java.rmi.server.*;
 import java.util.logging.Level;
 import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.Options;
@@ -55,7 +57,7 @@ private class FixFinger extends TimerTask{
 	/**
 	 * Logger for Peer.
 	 */
-	private Logger lg;
+	private static Logger lg;
 
 	/**
 	 * This peer's NodeID.
@@ -80,7 +82,9 @@ private class FixFinger extends TimerTask{
         /**
 	 * Finger table.
 	 */
-         FingerTable ft;
+	private FingerTable ft;
+	
+	private Map<String, String> dict;
 
 
 
@@ -114,10 +118,11 @@ private class FixFinger extends TimerTask{
 		lg.log(Level.FINEST, "Binding to local RMI registry with name "
 				+ nodeid.toString());
 		Naming.rebind(nodeid.toString(), this);
-
+		
 		// Initialize the node cache
 		peercache = new HashMap<Key, PeerInterface>();
-
+		
+		dict = new HashMap<String, String>();
 		// Initialize finger table
 		lg.log(Level.FINEST, "Getting initial finger table from superpeer");
 		ft = superpeer.getInitialFingerTable(nodeid);
@@ -143,7 +148,7 @@ private class FixFinger extends TimerTask{
 		// TEST
 		// superpeer.getPeers();
 	}
-
+	
 	private PeerInterface getPeer(Key node) throws Exception {
 		PeerInterface peer = peercache.get(node);
 		if (peer == null) {
@@ -210,25 +215,64 @@ private class FixFinger extends TimerTask{
 	//XXX: implement
 	return null;
     }
-    /**
-     * @return If this peer owns the definition for this word 
-     * the definition is returned as a string. In any other case null is
-     * returned.
-     */
-    public String getDef(String word) throws Exception
+      
+    @Override
+    public String lookup(String word, Level logLevel) throws Exception
     {
-	//XXX: implement
-	return null;
+    	if (dict.get(word) != null) {
+    		return dict.get(word); 
+    	}
+    	else {
+    		Key key = hasher.getHash(word);
+        	
+        	for (Integer i = 0; i < ft.table.size(); i++) {
+        		FingerEntry fe = ft.table.get(i);
+        		
+        		// If key lies in range
+        		if ((fe.getStartWordKey().less(key) &&
+            			key.less(fe.getEndWordKey())) || (i == ft.table.size() -1)) 
+        		{
+        			PeerInterface peer = (PeerInterface) Naming.lookup("//"
+        					+ ft.table.get(i).getIpAddress() + "/" + ft.table.get(i).getId());
+
+        			// Based on log level, prints path.
+        			lg.log(logLevel, nodeid + " ");
+        			
+        			return peer.lookup(word, logLevel);
+        		}
+        	}
+    	}
+    	
+    	
+    	return "";
     }
     /**
      * @return True if this peer has added the word successfully.
      * False otherwise.
      */
-    public boolean addDef(String word,String def) throws Exception
+    public boolean insert(String word, String def, Level logLevel) throws Exception
     {
-	//XXX: implement
-	return false;
+    	Key key = hasher.getHash(word);
+    	
+    	for (Integer i = 0; i < ft.table.size(); i++) {
+    		// If key lies in range
+    		FingerEntry fe = ft.table.get(i); 
+    		if ((fe.getStartWordKey().less(key) &&
+    			key.less(fe.getEndWordKey())) || (i == ft.table.size() -1)) 
+    		{
+    			PeerInterface peer = (PeerInterface) Naming.lookup("//"
+    					+ ft.table.get(i).getIpAddress() + "/" + ft.table.get(i).getId());
+    			
+    			// Based on log level, prints path
+    			lg.log(logLevel, nodeid + " ");
+    			
+    			return peer.insert(word, def, logLevel);
+    		}
+    	}
+    	
+    	return false;
     }
+   
     /**
      * @return A table of all words and definitions stored in this
      * peer.
@@ -239,6 +283,16 @@ private class FixFinger extends TimerTask{
 	return null;
     }
 
+    @Override
+    public void printData() throws Exception
+    {
+    	System.out.println("Node id: " + nodeid);
+    	
+    	System.out.println("Size of dictionary: " + dict.size());
+    	
+    	System.out.println("***  Finger Table *** ");
+    	ft.PrintFingerTable();
+    }
 
 	/**
 	 * @todo Everything
