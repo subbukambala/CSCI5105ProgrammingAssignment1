@@ -48,15 +48,10 @@ public interface PeerInterface extends Remote
      */
     public void notify(Key key) throws Exception;
 
-     
-     /**
-      * This method returns the fingerEntry of a node
-      */
-     public FingerEntry getFingerEntry() throws RemoteException;
-     
-
+    /**
+     * This method returns a nodeid which handles a key.
+     */
     public Key getSuccessor(Key key) throws RemoteException;
-
         
     /**
      * This method is used to print node's internal data such as Key, Finger Table, 
@@ -65,4 +60,5 @@ public interface PeerInterface extends Remote
     public void printData() throws Exception;
     
     
+    public void updateFingerTable(int mbits) throws RemoteException;
 }

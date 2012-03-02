@@ -12,7 +12,20 @@ import java.math.BigInteger;
  */
 public  class PeerInfo 
 {
-    private String ip;
-    public PeerInfo(String _ip) {ip = _ip;}
-    public String getIP() {return ip;}
+
+	private Key nodeid;
+	private String ip;
+
+	public PeerInfo(Key _nodeid, String _ip) {
+		ip = _ip;
+		nodeid = _nodeid;
+	}
+
+	public String getIP() {
+		return ip;
+	}
+	
+	public Key getNodeId() {
+		return nodeid;
+	}
 }

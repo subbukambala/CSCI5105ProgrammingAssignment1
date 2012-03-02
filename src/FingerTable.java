@@ -66,20 +66,24 @@ public class FingerTable implements Serializable
     public int size() {return table.size();}
 
 
-    public Key getClosestSuccessor(Key key) {
-	Iterator<FingerEntry> it = table.iterator();
-	while(it.hasNext()) {
-	    FingerEntry fe = it.next();
-        		
-	    // If key lies in range
-	    if (fe.getId().compare(key)==-1 && key.compare(fe.getId())==-1)
-		return fe.getId();
+	public Key getClosestSuccessor(Key key) {
+		Iterator<FingerEntry> it = table.iterator();
+		while (it.hasNext()) {
+			FingerEntry fe = it.next();
+
+			// If fingerKey greater than key... return 
+			if (fe.getId().compare(key) == 1) {
+				return fe.getNodeId();
+			}
+		}
+
+		if (table.size() == 0) {
+			return null;
+		}
+		else {
+			it = table.iterator();
+			return it.next().getNodeId();
+		}
 	}
-	if( table.size() == 0 ) return null;
-	else {
-	    it = table.iterator();
-	    return it.next().getId();
-	}
-    }
 
 }
