@@ -12,7 +12,6 @@ import java.util.logging.Level;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
-import java.util.TimerTask;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
 import org.apache.commons.cli.CommandLineParser;
@@ -27,7 +26,6 @@ import org.apache.commons.cli.HelpFormatter;
  * @todo Everything
  */
 public class Peer extends UnicastRemoteObject implements PeerInterface {
-
 
     /**
 	 * Logger for Peer.
@@ -68,7 +66,6 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 
     private Key pred;
     private Key succ;
-    private java.util.Timer timer;
     
 	/**
 	 * @todo Everything
@@ -101,14 +98,12 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		peercache = new HashMap<Key, PeerInterface>();
 		
 		dict = new HashMap<String, String>();
-		// Initialize finger table
-		lg.log(Level.FINEST, "Getting initial finger table from superpeer");
-		ft = superpeer.getInitialFingerTable(nodeid);
 		
 		succ = superpeer.getSuccessor(nodeid);
 
 		// Notify Successor.
 		if(succ != null) {
+		    //lock!
 			getPeer(succ).notify(nodeid);
 		}
 		
@@ -116,8 +111,6 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 			succ = nodeid;
 		}
 		
-		notifySuccessor();
-		notifyPredecessor();
 	       
 		
 		myFingerEntry = new FingerEntry(nodeid.succ(), succ);
@@ -128,15 +121,6 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		updateFingerTable(mbits);
 		System.out.println("2.4");
 		
-		
-		/*timer = new java.util.Timer();
-		stabilizer = new Stabilize(this);
-		timer.schedule(stabilizer, 0, 20000);
-
-		fingerFixer = new FixFinger(this);
-		timer.schedule(fingerFixer, 0, 5000);
-		 */		
-
 		// TEST
 //		lg.log(Level.FINEST, "Testing RMI self call of getName 3- " + getPeer(nodeid).getName());
 		
@@ -199,28 +183,6 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		
 		return null;
 	}
-
-    /**
-     * @todo Everything.
-     */
-    public void notify(Key key) throws Exception
-    {
-	lg.log(Level.FINEST, "Peer-"+key.toString()+" is now our predecssor.");
-	if(pred == null || (pred.compare(key)<=0 && key.compare(nodeid)<=0)) {
-	    pred = key;
-	}
-    }
-
-
-    public void stabilize() {
-	lg.log(Level.FINEST, "stabilize called.");
-	return;
-    }
-
-    public void fixFinger() {
-	lg.log(Level.FINEST, "fixFinger called.");
-	return;
-    }
     
     /** 
      * @return Null if this peer is the owner, otherwise it returns
@@ -418,45 +380,16 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
       * 
       * @throws RemoteException
       */
-     private void notifySuccessor() throws Exception 
+     public void notify(Key pred) throws Exception 
      {
-     	try {
-	    
 	    PeerInterface peer = getPeer(succ);
-	    peer.updatePredecessor(nodeid);
- 			
- 		} catch (MalformedURLException e) {
- 			// TODO Auto-generated catch block
- 			e.printStackTrace();
- 		} catch (NotBoundException e) {
- 			// TODO Auto-generated catch block
- 			e.printStackTrace();
- 		}
+	    updateFingerTable(hasher.getBitSize());
+	    peer.notify(nodeid);
      }
-     
-     /**
-      * New node calls this method to update notify predecessor
-      * 
-      * @throws RemoteException
-      */
-     private void notifyPredecessor() throws Exception 
-     {
-     	try {
-	    PeerInterface peer = getPeer(pred);
- 			peer.updateSuccessor(nodeid);
- 			
- 		} catch (MalformedURLException e) {
- 			// TODO Auto-generated catch block
- 			e.printStackTrace();
- 		} catch (NotBoundException e) {
- 			// TODO Auto-generated catch block
- 			e.printStackTrace();
- 		}
-     }
-     
-     @Override
- 	public void updateFingerTable(int mbits) throws RemoteException
+          
+ 	public void updateFingerTable(int mbits)
  	{
+	    // lock here
       	// crude way of constructing finger table for each node again.
     	 if (succ == nodeid) {
     		 constructFingerTable(mbits);
@@ -465,10 +398,6 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 
  		try {
  			constructFingerTable(mbits);
- 			
- 			if (succ != null) {
- 				getPeer(succ).updateFingerTable(mbits);
- 			}
  		} catch (Exception e) {
  			// TODO Auto-generated catch block
  			e.printStackTrace();
