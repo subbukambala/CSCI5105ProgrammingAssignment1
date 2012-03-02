@@ -148,37 +148,6 @@ public class SuperPeer extends UnicastRemoteObject implements
 	}
 
 
-	/**
-	 * @todo Document
-	 */
-    public FingerTable getInitialFingerTable(Key key) throws RemoteException,ServerNotActiveException {
-	lg.log(Level.FINER, "getInitialFingerTable Called.");
-		FingerTable table = new FingerTable(key, RemoteServer.getClientHost());
-	FingerEntry fe = null;
-	FingerEntry head = null;
-	synchronized(this) {
-	    if (peertable.size()>1){
-		    Iterator<FingerEntry> it = peertable.iterator();
-		    while(it.hasNext()) {
-			fe = it.next();
-			if(head == null) head = fe;
-			//Is this a successor
-			lg.log(Level.FINER, "getInitialFingerTable - "+fe.getId().toString()+" == "+key.toString()+"->"+Integer.toString(fe.getId().compare(key)));
-			if (fe.getId().compare(key)>0) {
-			    break;
-			}
-		    }
-		    if (fe!= null) {
-			if (fe==null) fe = head;
-			table.addFingerEntry(fe);		    
-		    }
-		    }
-		}
-		return table;
-
-    }
-
-
 
 
     /**
@@ -200,56 +169,6 @@ public class SuperPeer extends UnicastRemoteObject implements
 		}
 		return rv;
     }
-
-
-    /** 
-     * I am not really sure what this method is suppose to do but I suspect I already implemented it.
-     * We can talk about this later today
-   
-     
-    @Override
-    public String getNodeServiceAddress()  throws RemoteException
-    {
-    	if(peertable.size() != 0) {
-    		int random = 0;
-	    	if (peertable.size() == 1) {
-	    		random = 0;
-	    	}
-	    	else {
-	    		random = (int)(peertable.size() + (Math.random() * 37)) % peertable.size();
-	    	}
-	    	
-	    	//Service is uniquely identified by IP address and node ID
-	    	return peertable.get(random).getIpAddress() + "/" + peertable.get(random).getId();
-    	}
-    
-    		throw new RemoteException("No node is available to serve the request");
-    	}
-    }
-    
-   
-    
-    @Override
-    public String getNodeServiceAddress(Key id)  throws RemoteException
-    {
-    	System.out.println("Entered in serviceaddr____ " + id.getId() + "\n\n");
-    	
-    	FingerEntry fe = new FingerEntry();
-    	fe.setId(id);
-    	int index = Collections.binarySearch(peertable, fe);
-    	System.out.println(".... index... " + index + "-- peer size" + peertable.size());
-    	
-    	for (int i = 0; i < peertable.size(); i++) {
-    		System.out.println(peertable.get(i).getId() + "=== id");
-    	}
-    	if (index >= 0) {
-    		fe = peertable.get(index);
-    		return fe.getIpAddress() + "/" + fe.getId();
-    	}
-    	
-    	return null;
-    }
-     */
     
     /**
      * @todo Everything
