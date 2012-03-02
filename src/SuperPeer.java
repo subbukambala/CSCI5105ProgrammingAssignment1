@@ -207,7 +207,7 @@ public class SuperPeer extends UnicastRemoteObject implements
      */
     public static void main (String[] argv) 
     {
-	int mbits = 3;
+	int mbits = 5;
 	//Setup command line options
 	CommandLineParser parser = new BasicParser( );
 	Options options = new Options( );
