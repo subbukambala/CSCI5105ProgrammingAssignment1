@@ -159,15 +159,19 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 	}
 
 	@Override
-	public Key getSuccessor(Key key) throws RemoteException {
+	public Key getSuccessor(Key key) throws Exception {
+	        succ = superpeer.getSuccessor(nodeid);	
 		if (succ == null) {
-		    return null;
+		    return nodeid;
 		}
+	        pred = superpeer.getPredecessor(nodeid);	
+		Key max = new Key(BigInteger.valueOf((int)Math.pow(2,hasher.getBitSize()))).pred();
 		lg.log(Level.FINER,"getSuccessor Calling " + succ.toString() + " from " + nodeid.toString() + " with " + key.toString());
 			
 		if (
 		    (nodeid.compare(key)<0 && key.compare(succ)<=0)
-		    || (nodeid.compare(succ)>0 && key.compare(nodeid)>0) 
+		    ||(pred.compare(nodeid)>0 && (key.compare(max)<=0 || key.compare(new Key())>0))
+		    //|| (nodeid.compare(succ)>0 && (key.compare(nodeid)>0 || key.compare(succ)<=0))
 		    )
 		    {
 			lg.log(Level.FINER," DONE ");
@@ -192,7 +196,12 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
  		Key key = hasher.getHash(word);
  		lg.log(Level.FINEST, " Hashed word key: " + key);
  
- 		if (getSuccessor(key) == null || getSuccessor(key) == nodeid) {
+		Key max = new Key(BigInteger.valueOf((int)Math.pow(2,hasher.getBitSize()))).pred();
+
+	if(pred == null || (key.compare(pred)>0 && key.compare(nodeid)<=0)
+	   ||(pred.compare(nodeid)>0 && (key.compare(max)<=0 || key.compare(new Key())>0))
+	   //		   || (nodeid.compare(succ)>0 && (key.compare(nodeid)>0 || key.compare(succ)<=0))
+		   ) {
  			lg.log(Level.FINEST, " Successor of key is requested node: "
  					+ nodeid);
  	
@@ -211,8 +220,16 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
  			return peer.lookup(word, logLevel);
  		}
  	}    	
+    
 
-    	
+    public Key myPred() throws Exception {
+	return pred;
+    }
+    public Key mySucc() throws Exception {
+	return succ;
+    }
+
+	
     /**
      * @return True if this peer has added the word successfully.
      * False otherwise.
@@ -221,10 +238,14 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
     {
     	lg.log(Level.FINEST, "In insert method");
 
+	Key max = new Key(BigInteger.valueOf((int)Math.pow(2,hasher.getBitSize()))).pred();
 
 	Key key = hasher.getHash(word);	
     	lg.log(Level.FINEST, " Hashed word key: " + key);    	
-	if(pred == null || (key.compare(pred)>0 && key.compare(nodeid)<=0)) {
+	if(pred == null || (key.compare(pred)>0 && key.compare(nodeid)<=0)
+	   ||(pred.compare(nodeid)>0 && (key.compare(max)<=0 || key.compare(new Key())>0))
+	   //	  	  || (nodeid.compare(succ)>0 && (key.compare(nodeid)>0 || key.compare(succ)<=0))
+	   ) {
 	    lg.log(Level.FINEST, " Successor of key is requested node: " + nodeid);
 	    dict.put(word, def);
 	    return true;
@@ -258,7 +279,6 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
     	System.out.println("Size of dictionary: " + dict.size());
     	
     	System.out.println("***  Finger Table *** ");
-    	ft.PrintFingerTable();
     }
 
     @Override
@@ -286,7 +306,6 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 	 pred = _pred;
 	 lg.log(Level.FINER,"Notified by " + _pred.toString());
 	 succ = superpeer.getSuccessor(nodeid);	
-	 lg.log(Level.FINER,"Calling " + succ.toString());
  
 	 PeerInterface peer = getPeer(succ);
 	 if ( !lock) {
@@ -305,7 +324,7 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
  	{
 	    ft.clear();
  		try {
-		    for (int i = 1; i < mbits; i++) {
+		    for (int i = 1; i <= mbits; i++) {
 			FingerEntry fe = new FingerEntry();
 			Key fingerid = new Key().add(nodeid).add(new Key(BigInteger.valueOf((int)Math.pow(2,i-1)))).mod(new Key(BigInteger.valueOf((int)Math.pow(2,mbits))));
 			fe.setId(fingerid);
@@ -326,6 +345,8 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
  		}
  
  	}
+
+    public FingerTable getFingerTable() {return ft;}
 	    
 	/**
 	 * @todo Everything
@@ -368,6 +389,8 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 			System.out.println("Peer exception: " + e);
 		}
 	}
+
+
 
      
 }

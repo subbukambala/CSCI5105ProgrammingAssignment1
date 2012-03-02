@@ -26,6 +26,7 @@ public interface SuperPeerInterface extends Remote {
 
 
     public Key getSuccessor(Key nodeid)  throws Exception;
+    public Key getPredecessor(Key nodeid)  throws Exception;
     
     /**
      * @todo Document

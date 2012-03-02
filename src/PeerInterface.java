@@ -46,8 +46,14 @@ public interface PeerInterface extends Remote
 
      
 
-    public Key getSuccessor(Key key) throws RemoteException;
+    public Key getSuccessor(Key key) throws Exception;
 
+
+    public FingerTable getFingerTable() throws Exception;
+
+
+    public Key myPred() throws Exception;
+    public Key mySucc() throws Exception;
         
     /**
      * This method is used to print node's internal data such as Key, Finger Table, 

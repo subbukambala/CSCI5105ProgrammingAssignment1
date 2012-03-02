@@ -69,6 +69,11 @@ public class Key implements Serializable
 	return new Key(id.add(BigInteger.ONE));
     }
 
+    public Key pred() {
+
+	return new Key(id.subtract(BigInteger.ONE));
+    }
+
     public Key add(Key k) {
 
 	return new Key(id.add(k.id));

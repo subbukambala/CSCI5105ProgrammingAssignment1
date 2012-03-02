@@ -37,7 +37,7 @@ public class SuperPeer extends UnicastRemoteObject implements
 	 * We would like node ID's to be unique. This table will be used to ensure
 	 * this.
 	 */
-    private Collection<PeerInfo> peertable;
+    private TreeSet<PeerInfo> peertable;
 
 	/**
 	 * Random number generator for Node IDs.
@@ -84,6 +84,7 @@ public class SuperPeer extends UnicastRemoteObject implements
 	lock = false;
 	lg.log(Level.FINEST,"SuperPeer lock disengaged.");
     }
+
     public synchronized Key getSuccessor(Key nodeid)  throws Exception
     {	
 	lg.log(Level.FINER,"getSuccessor Entry.");
@@ -106,9 +107,29 @@ public class SuperPeer extends UnicastRemoteObject implements
 	Key rv = null;
 	if(fe!=null) rv = fe.getNodeId();
 	lg.log(Level.FINER,"getSuccessor Exit.");
-    	return rv;
-    	
+    	return rv;    	
     }
+
+    public synchronized Key getPredecessor(Key nodeid)  throws Exception
+    {	
+	lg.log(Level.FINER,"getPredecessor Entry.");
+    	Iterator<PeerInfo> it = peertable.iterator();
+    	Iterator<PeerInfo> it2 = peertable.iterator();
+    	PeerInfo fe =  null;
+    	PeerInfo pfe =  it2.next();
+
+    	while(it.hasNext()) {
+    		fe = it.next();
+    		if(fe.getNodeId().compare(nodeid)>=0) break;
+		pfe = fe;
+		fe = null;
+    	}
+	Key rv = pfe.getNodeId();
+	lg.log(Level.FINER,"getPredecessor Exit.");
+	if(pfe.getNodeId().equals(nodeid)) return peertable.last().getNodeId();
+    	else return rv;    	
+    }
+
 
     /**
      * @return A Key.
@@ -186,7 +207,7 @@ public class SuperPeer extends UnicastRemoteObject implements
      */
     public static void main (String[] argv) 
     {
-	int mbits = 8;
+	int mbits = 3;
 	//Setup command line options
 	CommandLineParser parser = new BasicParser( );
 	Options options = new Options( );

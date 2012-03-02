@@ -61,6 +61,8 @@ public class CLI {
 	cli.addOption("l", "lookup", true, "Lookup a word from a particular peer.");
 	cli.addOption("f", "filename", true, "Load all definitions from a file from a particular peer.");
 	cli.addOption("P", "peerIP", true, "Specify the peer IP address. If none is provided, one will be choosen if required by the directive.");
+	cli.addOption("p", "peerId", true, "Specify the peer Id address..");
+	cli.addOption("F", "fingertable", false, "TBD.");
 	
 	CommandLine commandLine = cli.parse(argv);
 	if( commandLine.hasOption('h') ) {
@@ -145,6 +147,46 @@ public class CLI {
 	    	
 	    System.exit(0);
 	}
+	if (commandLine.hasOption('F')) {
+	    SuperPeerInterface superpeer;
+	    try {
+		superpeer = (SuperPeerInterface) Naming
+		    .lookup("//" + commandLine.getArgs()[0] + "/SuperPeer");
+		if(pID==null) {
+		    String[] rv = pickPeer(superpeer.getPeers(),pIP);
+		    pIP = rv[1];
+		    pID = rv[0];
+		}
+		PeerInterface peer = (PeerInterface) Naming.lookup("//"+pIP+"/"+pID);	
+		String pred = peer.myPred().toString();
+		String succ = peer.mySucc().toString();
+		
+		System.out.println("Predecessor "+pred);
+		System.out.println("Successor "+succ);
+		
+		FingerTable ft = peer.getFingerTable();
+		String[][] rv = ft.getTable();
+		for(int i = 0 ; i < rv.length ; i++ ) {
+		    System.out.println(Integer.toString(i)+") "+rv[i][0]+" = "+rv[i][1]);
+		}
+ 		
+	    } catch (MalformedURLException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	    } catch (RemoteException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	    } catch (NotBoundException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+ 			}  catch (Exception e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	    }
+	    	
+	    System.exit(0);
+	}
+
 	if (commandLine.hasOption('f')) {
 	    try {
 		String filePath = commandLine.getOptionValue('f');
