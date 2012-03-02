@@ -31,11 +31,11 @@ public class FingerTable implements Serializable
 	 * @param id
 	 * @param ipAddress
 	 */
-	public FingerTable(Key id, String ipAddress)
+	public FingerTable(Key id, Key nodeId)
 	{
 		myFingerEntry = new FingerEntry();
 		myFingerEntry.setId(id);
-		myFingerEntry.setIpAddress(ipAddress);
+		myFingerEntry.setNodeId(nodeId);
 		table = new PriorityQueue<FingerEntry>(5,new FingerEntryComparator());
 	}
     /**
@@ -57,7 +57,7 @@ public class FingerTable implements Serializable
     	while(it.hasNext()) {
     		FingerEntry fe = it.next();
     		LOG.log(Level.INFO, fe.getId() + "\t" 
-    			+ fe.getIpAddress() + "\t" + fe.getStartWordKey() + "\t" + fe.getEndWordKey() + "\n");
+    			+ fe.getNodeId() + "\n");
     	}
     } 
     	

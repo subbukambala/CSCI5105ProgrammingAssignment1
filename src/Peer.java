@@ -29,27 +29,7 @@ import org.apache.commons.cli.HelpFormatter;
 public class Peer extends UnicastRemoteObject implements PeerInterface {
 
 
-    private class Stabilize extends TimerTask{
-	private Peer peer;
-	public Stabilize(Peer _peer){
-	    peer = _peer;
-	}
-		public void run() {
-			peer.stabilize();
-		}
-	}
-
-    private class FixFinger extends TimerTask{
-	private Peer peer;
-	public FixFinger(Peer _peer){
-	    peer = _peer;
-	}
-	public void run() {
-	    peer.fixFinger();
-	}
-    }
-
-	/**
+    /**
 	 * Logger for Peer.
 	 */
 	private static Logger lg;
@@ -88,8 +68,6 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 
     private Key pred;
     private Key succ;
-    private Stabilize stabilizer;
-    private FixFinger fingerFixer;
     private java.util.Timer timer;
     
 	/**
@@ -134,10 +112,15 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 			getPeer(succ).notify(nodeid);
 		}
 		
+		if (succ == null) {
+			succ = nodeid;
+		}
+		
 		notifySuccessor();
 		notifyPredecessor();
 	       
-		myFingerEntry = new FingerEntry(nodeid,superpeer.getAddress(nodeid));
+		
+		myFingerEntry = new FingerEntry(nodeid.succ(), succ);
 
 		int mbits = hasher.getBitSize();
 		
@@ -265,17 +248,17 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		int i = 0;
 		while(it.hasNext()) {
 		    FingerEntry fe = it.next();
-        		
+        		/*
 		    // If key lies in range
-		    if ((fe.getStartWordKey().compare(key)==-1 &&
-			 key.compare(fe.getEndWordKey())==-1) || (i == ft.size() -1)) {
+		    if (fe.getId().compare(key) != -1) {
+		    	break;
 			PeerInterface peer = getPeer(fe.getId());
 			
 			// Based on log level, prints path.
 			lg.log(logLevel, nodeid + " ");
         			
 			return peer.lookup(word, logLevel);
-		    }
+		    }*/
 		    i++;
         	}
     	}
@@ -398,16 +381,6 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		}
 	}
 
-     
-     public void updatePredecessor(Key key) throws RemoteException
-     {
-     	pred = key;
-     }
-     
-     public void updateSuccessor(Key key) throws RemoteException
-     {
-     	succ = key;
-     }    	
      
  	public FingerEntry getFingerEntry() throws RemoteException
  	{

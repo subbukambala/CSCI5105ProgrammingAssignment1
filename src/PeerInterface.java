@@ -49,16 +49,6 @@ public interface PeerInterface extends Remote
     public void notify(Key key) throws Exception;
 
      /**
-      * This method is called by peer to update it's predecessor
-      */
-     public void updatePredecessor(Key key) throws RemoteException;
-     
-     /**
-      * This method is called by peer to update it's predecessor
-      */
-     public void updateSuccessor(Key key) throws RemoteException;
-     
-     /**
       * This method returns the successor node of a key
       */
      public Key getSuccessor(Key key) throws RemoteException;
