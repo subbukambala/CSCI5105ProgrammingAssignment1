@@ -12,7 +12,7 @@ public interface SuperPeerInterface extends Remote {
      * @return A NodeID.
      * @exception RemoteException if the remote invocation fails.
      */
-    public Key join() throws RemoteException,ServerNotActiveException,NoSuchAlgorithmException;
+    public Key join() throws Exception;
     /**
      * Retrieves an Address from a NodeID.
      * @return An Address.
@@ -22,23 +22,22 @@ public interface SuperPeerInterface extends Remote {
     /**
      * @return The Hasher class
      */
-    public HasherInterface getHasher() throws RemoteException;
+    public HasherInterface getHasher() throws Exception;
 
 
-    public Key getSuccessor(Key nodeid)  throws RemoteException;
+    public Key getSuccessor(Key nodeid)  throws Exception;
     
     /**
      * @todo Document
      */
-    public String getAddress(Key id) throws RemoteException;
+    public String getAddress(Key id) throws Exception;
 
     /**
      * @todo Document
      */
     public String[][] getPeers() throws Exception;
-    
-    /**
-     * Returns the Key bits size
-     */
-    public Integer getChordKeyBitsSize()  throws RemoteException;
+
+    public void lock() throws Exception;
+    public void unlock() throws Exception;
+
 }

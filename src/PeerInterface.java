@@ -19,10 +19,6 @@ public interface PeerInterface extends Remote
      * @return The name of this peer as a String.
      */
     public String getName() throws Exception;
-    /** 
-     * @return Return the key of the owner of the input key.
-     */
-    public Key getOwner(Key key) throws Exception;
     
     /**
      * This method looks for a key in whole DHT recursively.

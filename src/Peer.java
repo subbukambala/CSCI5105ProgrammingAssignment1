@@ -52,7 +52,6 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 	 */
 	private HashMap<Key, PeerInterface> peercache;
 
-	/**
 	 * Finger table.
 	 */
 	private FingerTable ft;
@@ -61,6 +60,8 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 
     private Key pred;
     private Key succ;
+    private boolean lock = false;
+    
     
     private boolean lock = false;
     
@@ -68,60 +69,57 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 	 * @todo Everything
 	 */
 	public Peer(String sp) throws Exception {
-		try {
-	    pred = null;
-	    succ = null;
+	    try {
+		pred = null;
+		succ = null;
+
+
+		
+
 		// Find the SuperPeer
 		superpeer = (SuperPeerInterface) Naming
 				.lookup("//" + sp + "/SuperPeer");
 
-		// Get this Peer's NodeID
-		nodeid = superpeer.join();
-
-		// Initialize the Logger
-		lg = new Logger("Peer:" + nodeid.toString());
-		lg.log(Level.FINEST, "Peer started.");
-
-		// Get Hasher object
-		lg.log(Level.FINEST, "Retrieving Hash object");
-		hasher = superpeer.getHasher();
-
-		// Register with the RMI Registry.
-		lg.log(Level.FINEST, "Binding to local RMI registry with name "
-				+ nodeid.toString());
-		Naming.bind("fdsfds", this);
-		
 		// Initialize the node cache
 		peercache = new HashMap<Key, PeerInterface>();
-		
+	
+		// Initialize word map
 		dict = new HashMap<String, String>();
-		
-		succ = superpeer.getSuccessor(nodeid);
 
-		// Notify Successor.
-		if(succ != null) {
-		    //lock!
-			getPeer(succ).notify(nodeid);
-		}
-		
-		int mbits = hasher.getBitSize();
-		
-		System.out.println("++++++++++ size of mbits" + mbits);
-		updateFingerTable(mbits);
-		System.out.println("2.4");
-		
-		// TEST
-//		lg.log(Level.FINEST, "Testing RMI self call of getName 3- " + getPeer(nodeid).getName());
+		superpeer.lock();
+		  // Get this Peer's NodeID
+		  nodeid = superpeer.join();
+		  //Start logger
+		  lg = new Logger("Peer:" + nodeid.toString());
+		  lg.log(Level.FINEST, "Peer started.");
+
+		  // Register with the RMI Registry.
+		  lg.log(Level.FINEST, "Binding to local RMI registry with name "
+				+ nodeid.toString());
+		  Naming.rebind(nodeid.toString(), this);
+
+		  // Get Successor
+		  succ = superpeer.getSuccessor(nodeid);		
+		  // Get hasher
+		  lg.log(Level.FINEST, "Retrieving Hash object");
+		  hasher = superpeer.getHasher();
+		  // Set mbits
+		  int mbits = hasher.getBitSize();
+		  // Initialize finger table
+		  ft = new FingerTable(nodeid.succ(),nodeid);
+		  // Update finger table
+		  constructFingerTable(mbits);
+		superpeer.unlock();
+		lg.log(Level.FINEST, "Exit Critical Section");
+
 		
 		lg.log(Level.FINEST,
 				"Testing RMI self call of getName - "
 						+ getPeer(nodeid).getName());
-		// TEST
-		// superpeer.getPeers();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
+	    }
+	    catch (Exception e) {
+		e.printStackTrace();
+	    }
 	}
 	
 	private PeerInterface getPeer(Key node) throws Exception {
@@ -130,9 +128,9 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 
 		try {
 			if (peer == null) {
-				String addy = superpeer.getAddress(node);
-
-				if (addy != null) {
+			    String addy = superpeer.getAddress(node);
+			    lg.log(Level.FINER,"//" + addy + "/" + node.toString());
+			    if (addy != null) {
 					peer = (PeerInterface) Naming.lookup("//" + addy + "/"
 							+ node.toString());
 
@@ -172,17 +170,8 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		
 		return null;
 	}
-    
-    /** 
-     * @return Null if this peer is the owner, otherwise it returns
-     * the next applicable node in the finger table.
-     */
-    public Key getOwner(Key key) throws Exception
-    {
-	//XXX: implement
-	return null;
-    }
-      
+
+
     @Override
 	public String lookup(String word, Level logLevel) throws Exception 
 	{
@@ -203,13 +192,14 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		} else {
 			Key closestNode = ft.getClosestSuccessor(key);
 	    	
-			// Based on log level, prints path.
+ 			// Based on log level, prints path.
 			lg.log(logLevel, closestNode + " ");
 			
 			PeerInterface peer = getPeer(closestNode);
-			return peer.lookup(word, logLevel);
+ 			return peer.lookup(word, logLevel);
 		}
 	}    	
+
     	
     	
     /**
@@ -219,8 +209,9 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
     public boolean insert(String word, String def, Level logLevel) throws Exception
     {
     	lg.log(Level.FINEST, "In insert method");
-    	
-		Key key = hasher.getHash(word);
+
+	Key key = hasher.getHash(word);
+	Key closestNode = ft.getClosestSuccessor(key);
 		 	
     	lg.log(Level.FINEST, " Hashed word key: " + key);    	
     	if (getSuccessor(key) == null) {
@@ -236,6 +227,7 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		
 		PeerInterface peer = getPeer(closestNode);
 		peer.insert(word, def, logLevel);
+		
 		
     	return false;
     }
@@ -275,6 +267,52 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 			e.printStackTrace();
 		}
     }
+
+     /**
+      * New node calls this method to update notify successor
+      * 
+      * @throws RemoteException
+      */
+     public synchronized void notify(Key _pred) throws Exception 
+     {
+	 pred = _pred;
+	 PeerInterface peer = getPeer(succ);
+	 if ( !lock) {
+	     lock = true;
+	     constructFingerTable(hasher.getBitSize());
+	     //	     peer.notify(nodeid);
+	     lock = false;
+	     return;
+	 }
+	 else return;
+     } 
+ 	public void constructFingerTable(int mbits) 
+ 	{
+ 		try {
+ 			for (int i = 1; i < mbits; i++) {
+ 				System.out.println("1...");
+				FingerEntry fe = new FingerEntry();
+ 				fe.setId(nodeid);
+				Key fingerid = new Key().add(nodeid).mod(new Key(BigInteger.valueOf((int)Math.pow(2,mbits))));
+				fe.setId(fingerid);
+				fe.setNodeId(getSuccessor(fingerid));
+ 				ft.addFingerEntry(fe);
+ 			}
+ 			
+ 			lg.log(Level.FINEST, "Logging *************2**" + ft.table.size());
+ 			
+ 
+ 		} catch (RemoteException e) {
+ 			// TODO Auto-generated catch block
+ 			e.printStackTrace();
+ 		}
+ 
+ 		catch (Exception e) {
+ 			// TODO Auto-generated catch block
+ 			e.printStackTrace();
+ 		}
+ 
+ 	}
 	    
 	/**
 	 * @todo Everything
@@ -318,74 +356,22 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		}
 	}
 
-	/**
-	 * New node calls this method to update notify successor
-	 * 
-	 * @throws RemoteException
-	 */
-	public void notify(Key _pred) throws Exception 
-	{
 		pred = _pred;
-	    PeerInterface peer = getPeer(succ);
-	    updateFingerTable(hasher.getBitSize());
-	    peer.notify(nodeid);
-	}
-      
- 	public void updateFingerTable(int mbits) throws RemoteException
- 	{
- 		if (! lock) {
  			lock = true;
 
- 			 // crude way of constructing finger table for each node again.
-	    	try {
-	 			constructFingerTable(mbits);
-	 			
 	 			if (succ != null && succ != nodeid) {
 	 				getPeer(succ).updateFingerTable(mbits);
 	 			}
 	 			else {
 	 				lock = false;
-	 			}
-	 			
-	 		} catch (Exception e) {
-	 			// TODO Auto-generated catch block
-	 			e.printStackTrace();
-	 			System.out.println("1");
-	 		}
-	 	}
  		else {
  			lock = false;
  			return;
  		}
  	}
- 
- 	public void constructFingerTable(int mbits) 
- 	{
- 		try {
- 			for (int i = 1; i < mbits; i++) {
  				
-				FingerEntry fe = new FingerEntry();
- 				
-				Key fingerid = new Key().add(nodeid).mod(new Key(BigInteger.valueOf((int)Math.pow(2,mbits))));
+
  	
-				fe.setId(fingerid);
-				fe.setNodeId(getSuccessor(fingerid));
- 
- 				ft.addFingerEntry(fe);
- 			}
- 			
- 			lg.log(Level.FINEST, "Logging *************2**" + ft.table.size());
- 
- 		} catch (RemoteException e) {
- 			// TODO Auto-generated catch block
- 			e.printStackTrace();
- 		}
- 
- 		catch (Exception e) {
- 			// TODO Auto-generated catch block
- 			e.printStackTrace();
- 		}
- 
- 	}
+
      
 }
