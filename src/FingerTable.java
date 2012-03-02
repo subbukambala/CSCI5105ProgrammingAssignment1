@@ -5,10 +5,9 @@
  */
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.PriorityQueue;
+import java.util.TreeSet;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -36,7 +35,7 @@ public class FingerTable implements Serializable
 		myFingerEntry = new FingerEntry();
 		myFingerEntry.setId(id);
 		myFingerEntry.setNodeId(nodeId);
-		table = new PriorityQueue<FingerEntry>(5,new FingerEntryComparator());
+		table = new TreeSet<FingerEntry>(new FingerEntryComparator());
 	}
     /**
 	 * Constructs init finger table with previously registered node details.
@@ -63,16 +62,21 @@ public class FingerTable implements Serializable
     	
     public Iterator<FingerEntry> iterator () { return table.iterator(); } 
 
+
+    public void clear () {table.clear();}
+
     public int size() {return table.size();}
 
 
 	public Key getClosestSuccessor(Key key) {
 		Iterator<FingerEntry> it = table.iterator();
+		FingerEntry fe = null;
 		while (it.hasNext()) {
-			FingerEntry fe = it.next();
+			fe = it.next();
+			LOG.log(Level.FINER,"STUFFS " + fe.getNodeId() + " " + fe.getId() + " " +key.toString());
 
 			// If fingerKey greater than key... return 
-			if (fe.getId().compare(key) == 1) {
+			if (fe.getId().compare(key)>=0) {
 				return fe.getNodeId();
 			}
 		}
@@ -82,7 +86,8 @@ public class FingerTable implements Serializable
 		}
 		else {
 			it = table.iterator();
-			return it.next().getNodeId();
+			fe = it.next();
+			return fe.getNodeId();
 		}
 	}
 

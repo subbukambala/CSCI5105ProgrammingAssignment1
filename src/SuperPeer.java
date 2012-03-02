@@ -17,7 +17,7 @@ import org.apache.commons.cli.HelpFormatter;
 
 
 import java.util.Collections;
-import java.util.PriorityQueue;
+import java.util.TreeSet;
 import java.util.Collection;
 import java.util.Iterator;
 import java.security.SecureRandom;
@@ -66,7 +66,7 @@ public class SuperPeer extends UnicastRemoteObject implements
 	lock = false;
 	lg = new Logger("SuperPeer");
 	mbits = _mbits;
-	peertable = new PriorityQueue<PeerInfo>(5,new PeerInfoComparator());
+	peertable = new TreeSet<PeerInfo>(new PeerInfoComparator());
 	prng = SecureRandom.getInstance("SHA1PRNG");
 	hasher = new SHA1Hasher(mbits);
 	lg.log(Level.FINEST,"SuperPeer started.");
@@ -92,13 +92,15 @@ public class SuperPeer extends UnicastRemoteObject implements
 
     	while(it.hasNext()) {
     		fe = it.next();
-    		if(fe.getNodeId().compare(nodeid)>0) break;;
+    		if(fe.getNodeId().compare(nodeid)>0) break;
+		fe = null;
     	}
 	if(fe == null) {
+	    lg.log(Level.FINER,"getSuccessor - still null.");
 	    it = peertable.iterator();
 	    if(it.hasNext()) {
     		fe = it.next();
-		if(fe.equals(nodeid)) fe = null;;
+		if(fe.getNodeId().compare(nodeid)==0) fe = null;
 	    }
     	}
 	Key rv = null;

@@ -48,8 +48,8 @@ public class CLI {
      */
     public static void main (String[] argv) 
     {
-	String pIP = "";
-	String pID = "";
+	String pIP = null;
+	String pID = null;
 	ArgumentHandler cli = new ArgumentHandler
 	    (
 	     "CLI [-hL] [-l word] [-f file] [superpeer address]  [-P peer address] [-p peer ID])"
@@ -166,6 +166,8 @@ public class CLI {
 		    pIP = rv[1];
 		    pID = rv[0];
 		}
+	       
+		LOG.log(Level.FINEST, "//"+pIP+"/"+pID);
 		PeerInterface peer = (PeerInterface) Naming.lookup("//"+pIP+"/"+pID);	
 		Iterator it = dict.entrySet().iterator();
 		while (it.hasNext()) {
