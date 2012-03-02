@@ -13,16 +13,14 @@ import java.util.List;
  */
 public class FingerEntry implements Serializable {
 	private Key id;
-	private String ipAddress;
-	private Key startWordKey;
-	private Key endWordKey;
-
+	private Key nodeId;
+	
 	public FingerEntry() {	}
 	
-	public FingerEntry(Key _id, String _ipAddress)
+	public FingerEntry(Key _id, Key _nodeId)
 	{
 		id = _id;
-		ipAddress = _ipAddress;
+		nodeId = _nodeId;
 	}
 	
 	public Key getId() {
@@ -33,28 +31,12 @@ public class FingerEntry implements Serializable {
 		this.id = id;
 	}
 
-	public String getIpAddress() {
-		return ipAddress;
+	public Key getNodeId() {
+		return nodeId;
 	}
 
-	public void setIpAddress(String ipAddress) {
-		this.ipAddress = ipAddress;
-	}
-
-	public void setStartWordKey(Key startWordKey) {
-		this.startWordKey = startWordKey;
-	}
-
-	public void setEndWordKey(Key endWordKey) {
-		this.endWordKey = endWordKey;
-	}
-	
-	public Key getStartWordKey() {
-		return startWordKey;
-	}
-
-	public Key getEndWordKey() {
-		return endWordKey;
+	public void setNodeId(Key nodeId) {
+		this.nodeId = nodeId;
 	}
 
 	@Override

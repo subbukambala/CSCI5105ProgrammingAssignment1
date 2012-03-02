@@ -31,11 +31,11 @@ public class FingerTable implements Serializable
 	 * @param id
 	 * @param ipAddress
 	 */
-	public FingerTable(Key id, String ipAddress)
+	public FingerTable(Key id, Key nodeId)
 	{
 		myFingerEntry = new FingerEntry();
 		myFingerEntry.setId(id);
-		myFingerEntry.setIpAddress(ipAddress);
+		myFingerEntry.setNodeId(nodeId);
 		table = new PriorityQueue<FingerEntry>(5,new FingerEntryComparator());
 	}
     /**
@@ -57,7 +57,7 @@ public class FingerTable implements Serializable
     	while(it.hasNext()) {
     		FingerEntry fe = it.next();
     		LOG.log(Level.INFO, fe.getId() + "\t" 
-    			+ fe.getIpAddress() + "\t" + fe.getStartWordKey() + "\t" + fe.getEndWordKey() + "\n");
+    			+ fe.getNodeId() + "\n");
     	}
     } 
     	
@@ -66,20 +66,24 @@ public class FingerTable implements Serializable
     public int size() {return table.size();}
 
 
-    public Key getClosestSuccessor(Key key) {
-	Iterator<FingerEntry> it = table.iterator();
-	while(it.hasNext()) {
-	    FingerEntry fe = it.next();
-        		
-	    // If key lies in range
-	    if (fe.getId().compare(key)==-1 && key.compare(fe.getId())==-1)
-		return fe.getId();
+	public Key getClosestSuccessor(Key key) {
+		Iterator<FingerEntry> it = table.iterator();
+		while (it.hasNext()) {
+			FingerEntry fe = it.next();
+
+			// If fingerKey greater than key... return 
+			if (fe.getId().compare(key) == 1) {
+				return fe.getNodeId();
+			}
+		}
+
+		if (table.size() == 0) {
+			return null;
+		}
+		else {
+			it = table.iterator();
+			return it.next().getNodeId();
+		}
 	}
-	if( table.size() == 0 ) return null;
-	else {
-	    it = table.iterator();
-	    return it.next().getId();
-	}
-    }
 
 }

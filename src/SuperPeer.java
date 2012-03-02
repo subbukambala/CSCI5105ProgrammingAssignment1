@@ -37,7 +37,7 @@ public class SuperPeer extends UnicastRemoteObject implements
 	 * We would like node ID's to be unique. This table will be used to ensure
 	 * this.
 	 */
-    private Collection<FingerEntry> peertable;
+    private Collection<PeerInfo> peertable;
 
 	/**
 	 * Random number generator for Node IDs.
@@ -66,7 +66,7 @@ public class SuperPeer extends UnicastRemoteObject implements
 	lock = false;
 	lg = new Logger("SuperPeer");
 	mbits = _mbits;
-	peertable = new PriorityQueue<FingerEntry>(5,new FingerEntryComparator());
+	peertable = new PriorityQueue<PeerInfo>(5,new PeerInfoComparator());
 	prng = SecureRandom.getInstance("SHA1PRNG");
 	hasher = new SHA1Hasher(mbits);
 	lg.log(Level.FINEST,"SuperPeer started.");
@@ -87,21 +87,22 @@ public class SuperPeer extends UnicastRemoteObject implements
     public synchronized Key getSuccessor(Key nodeid)  throws Exception
     {	
 	lg.log(Level.FINER,"getSuccessor Entry.");
-    	Iterator<FingerEntry> it = peertable.iterator();
-    	FingerEntry fe = null;
+    	Iterator<PeerInfo> it = peertable.iterator();
+    	PeerInfo fe =  null;
+
     	while(it.hasNext()) {
     		fe = it.next();
-    		if(fe.getId().compare(nodeid)>0) break;
+    		if(fe.getNodeId().compare(nodeid)>0) break;;
     	}
 	if(fe == null) {
 	    it = peertable.iterator();
 	    if(it.hasNext()) {
     		fe = it.next();
-    		if(fe.equals(nodeid)) fe = null;
+		if(fe.equals(nodeid)) fe = null;;
 	    }
     	}
 	Key rv = null;
-	if(fe!=null) rv = fe.getId();
+	if(fe!=null) rv = fe.getNodeId();
 	lg.log(Level.FINER,"getSuccessor Exit.");
     	return rv;
     	
@@ -117,7 +118,7 @@ public class SuperPeer extends UnicastRemoteObject implements
 	Key rv;
 	// XXX: ID collisions need to be detected using peertable!
 	rv = hasher.getHash(new Integer(prng.nextInt()).toString());
-	peertable.add(new FingerEntry(rv, RemoteServer.getClientHost()));
+	peertable.add(new PeerInfo(rv, RemoteServer.getClientHost()));
 	lg.log(Level.FINEST, "Allocating Node ID " + rv.toString() + ".");
 	lg.log(Level.FINER,"join Exit.");
 	return rv;
@@ -141,15 +142,15 @@ public class SuperPeer extends UnicastRemoteObject implements
      */
     public synchronized String getAddress(Key id) throws Exception {
 	lg.log(Level.FINER, "getAddress Entry.");
-	FingerEntry fe = null;
-	Iterator<FingerEntry> it = peertable.iterator();
+	PeerInfo fe = null;
+	Iterator<PeerInfo> it = peertable.iterator();
 	while(it.hasNext()) {
 	    fe = it.next();
-	    lg.log(Level.FINEST, "getAddress - Checking " + fe.getId().toString()+" for match ...");
-	    if (fe.getId().equals(id)) {
+	    lg.log(Level.FINEST, "getAddress - Checking " + fe.getNodeId().toString()+" for match ...");
+	    if (fe.getNodeId().equals(id)) {
 		lg.log(Level.FINEST, "getAddress - match found.");
 		lg.log(Level.FINER, "getAddress Exit.");
-		return fe.getIpAddress();
+		return fe.getIP();
 	    }
 	}
     
@@ -165,13 +166,14 @@ public class SuperPeer extends UnicastRemoteObject implements
     public synchronized String[][] getPeers() throws Exception
     {
 	String [][] rv = new String[peertable.size()][2];
-	FingerEntry fe = null;
-	Iterator<FingerEntry> it = peertable.iterator();
+	PeerInfo fe = null;
+	Iterator<PeerInfo> it = peertable.iterator();
 	int i = 0;
 	while(it.hasNext()) {
 	    fe = it.next();
-	    rv[i][0] = fe.getId().toString();
-	    rv[i][1] = fe.getIpAddress();
+	    rv[i][0] = fe.getNodeId().toString();
+	    rv[i][1] = fe.getIP();
+
 	    i++;
 	}
 	return rv;

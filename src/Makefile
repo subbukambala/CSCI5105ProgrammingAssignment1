@@ -53,7 +53,9 @@ CLASSES = \
 	SuperPeer.java \
         SuperPeerInterface.java \
 	PeerInterface.java \
-	Peer.java
+	Peer.java \
+	PeerInfo.java \
+	PeerInfoComparator.java
 
 
 #
