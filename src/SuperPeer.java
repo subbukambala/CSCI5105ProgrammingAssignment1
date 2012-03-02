@@ -23,6 +23,8 @@ import java.util.Iterator;
 import java.security.SecureRandom;
 import java.security.NoSuchAlgorithmException;
 import java.lang.Math.*;
+import java.lang.Thread;
+import java.util.concurrent.locks.*;
 
 public class SuperPeer extends UnicastRemoteObject implements
 		SuperPeerInterface {
@@ -47,6 +49,7 @@ public class SuperPeer extends UnicastRemoteObject implements
 	 */
 	private HasherInterface hasher;
 
+    private boolean lock;
     
 
     /**
@@ -54,38 +57,13 @@ public class SuperPeer extends UnicastRemoteObject implements
      */
     private int mbits;
     
-    public Integer getChordKeyBitsSize()  throws RemoteException
-    {
-    	return mbits;
-    }
-    
-    
-    public Key getSuccessor(Key nodeid)  throws RemoteException
-    {
-    	System.out.println(" get successor in superpeer");
-    	Iterator<FingerEntry> it = peertable.iterator();
-    	FingerEntry fe;
-    	while(it.hasNext()) {
-    		fe = it.next();
-    		if(fe.getId().compare(nodeid)>0) {
-    			return fe.getId();
-    		}
-    	}
-    	it = peertable.iterator();
-    	if(it.hasNext()) {
-    		fe = it.next();
-    		if(!fe.equals(nodeid)) return fe.getId();
-    	}
-    	
-    	return null;
-    	
-    }
     
     /**
      * @todo Everything
      */
     SuperPeer (int _mbits) throws RemoteException, NoSuchAlgorithmException
     {
+	lock = false;
 	lg = new Logger("SuperPeer");
 	mbits = _mbits;
 	peertable = new PriorityQueue<FingerEntry>(5,new FingerEntryComparator());
@@ -94,80 +72,109 @@ public class SuperPeer extends UnicastRemoteObject implements
 	lg.log(Level.FINEST,"SuperPeer started.");
     }
 
+    
+    public void lock() throws Exception{
+	lg.log(Level.FINEST,"SuperPeer lock engaged.");
+	while(lock) {Thread.sleep(1000);}
+	lock = true;
+    }
 
-	/**
-	 * @return A Key.
-	 * @exception RemoteException
-	 *                if the remote invocation fails.
-	 */
-	public Key join() throws RemoteException, ServerNotActiveException,
-			NoSuchAlgorithmException {
-		lg.log(Level.FINEST, "Join Called.");
-		Key rv;
-		synchronized (this) {
-			// XXX: ID collisions need to be detected using peertable!
-			rv = hasher.getHash(new Integer(prng.nextInt()).toString());
-			peertable.add(new FingerEntry(rv, RemoteServer.getClientHost()));
-			lg.log(Level.FINEST, "Allocating Node ID " + rv.toString() + ".");
-		}
-		return rv;
+
+    public synchronized void unlock() throws Exception{
+	lock = false;
+	lg.log(Level.FINEST,"SuperPeer lock disengaged.");
+    }
+    public synchronized Key getSuccessor(Key nodeid)  throws Exception
+    {	
+	lg.log(Level.FINER,"getSuccessor Entry.");
+    	Iterator<FingerEntry> it = peertable.iterator();
+    	FingerEntry fe = null;
+    	while(it.hasNext()) {
+    		fe = it.next();
+    		if(fe.getId().compare(nodeid)>0) break;
+    	}
+	if(fe == null) {
+	    it = peertable.iterator();
+	    if(it.hasNext()) {
+    		fe = it.next();
+    		if(fe.equals(nodeid)) fe = null;
+	    }
+    	}
+	Key rv = null;
+	if(fe!=null) rv = fe.getId();
+	lg.log(Level.FINER,"getSuccessor Exit.");
+    	return rv;
+    	
+    }
+
+    /**
+     * @return A Key.
+     * @exception RemoteException
+     *                if the remote invocation fails.
+     */
+    public synchronized Key join() throws Exception {
+	lg.log(Level.FINER,"join Entry.");
+	Key rv;
+	// XXX: ID collisions need to be detected using peertable!
+	rv = hasher.getHash(new Integer(prng.nextInt()).toString());
+	peertable.add(new FingerEntry(rv, RemoteServer.getClientHost()));
+	lg.log(Level.FINEST, "Allocating Node ID " + rv.toString() + ".");
+	lg.log(Level.FINER,"join Exit.");
+	return rv;
+    }
+
+    /**
+     * @return The Hasher class
+     */
+    public synchronized HasherInterface getHasher() throws Exception {
+	lg.log(Level.FINER,"getHasher Entry.");
+	lg.log(Level.FINER,"getHasher Exit.");
+	return new SHA1Hasher(mbits);
 	}
 
-	/**
-	 * @return The Hasher class
-	 */
-	public HasherInterface getHasher() throws RemoteException {
-
-	    return new SHA1Hasher(mbits);
+    /**
+     * Retrieves an Address from a Key.
+     * 
+     * @return A string containing an IP String Address.
+     * @exception RemoteException
+     *                if the remote invocation fails.
+     */
+    public synchronized String getAddress(Key id) throws Exception {
+	lg.log(Level.FINER, "getAddress Entry.");
+	FingerEntry fe = null;
+	Iterator<FingerEntry> it = peertable.iterator();
+	while(it.hasNext()) {
+	    fe = it.next();
+	    lg.log(Level.FINEST, "getAddress - Checking " + fe.getId().toString()+" for match ...");
+	    if (fe.getId().equals(id)) {
+		lg.log(Level.FINEST, "getAddress - match found.");
+		lg.log(Level.FINER, "getAddress Exit.");
+		return fe.getIpAddress();
+	    }
 	}
-
-	/**
-	 * Retrieves an Address from a Key.
-	 * 
-	 * @return A string containing an IP String Address.
-	 * @exception RemoteException
-	 *                if the remote invocation fails.
-	 */
-	public String getAddress(Key id) throws RemoteException {
-		lg.log(Level.FINER, "getAddress Called.");
-		FingerEntry fe = null;
-		synchronized (this) {
-		    Iterator<FingerEntry> it = peertable.iterator();
-		    while(it.hasNext()) {
-			fe = it.next();
-			lg.log(Level.FINEST, "getAddress - Checking " + fe.getId().toString()+" for match ...");
-			if (fe.getId().equals(id)) {
-			    lg.log(Level.FINEST, "getAddress - match found.");
-			    return fe.getIpAddress();
-			}
-		    }
-		}
-		lg.log(Level.WARNING, "getAddress failed on " + id.toString()
-		       + ", returning null!");
-		return null;
-	}
-
-
-
+    
+	lg.log(Level.WARNING, "getAddress failed on " + id.toString()
+	       + ", returning null!");
+	lg.log(Level.FINER, "getAddress Entry.");
+	return null;
+    }
 
     /**
      * @todo Document
      */
-    public String[][] getPeers() throws Exception
+    public synchronized String[][] getPeers() throws Exception
     {
-		String [][] rv = new String[peertable.size()][2];
-		FingerEntry fe = null;
-		synchronized (this) {
-		    Iterator<FingerEntry> it = peertable.iterator();
-		    int i = 0;
-		    while(it.hasNext()) {
-			fe = it.next();
-			rv[i][0] = fe.getId().toString();
-			rv[i][1] = fe.getIpAddress();
-			i++;
-		    }
-		}
-		return rv;
+	String [][] rv = new String[peertable.size()][2];
+	FingerEntry fe = null;
+	Iterator<FingerEntry> it = peertable.iterator();
+	int i = 0;
+	while(it.hasNext()) {
+	    fe = it.next();
+	    rv[i][0] = fe.getId().toString();
+	    rv[i][1] = fe.getIpAddress();
+	    i++;
+	}
+	return rv;
     }
     
     /**

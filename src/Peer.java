@@ -71,63 +71,56 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 	 * @todo Everything
 	 */
 	public Peer(String sp) throws Exception {
-		try {
-	    pred = null;
-	    succ = null;
+	    try {
+		pred = null;
+		succ = null;
+
+
 		// Find the SuperPeer
 		superpeer = (SuperPeerInterface) Naming
 				.lookup("//" + sp + "/SuperPeer");
 
-		// Get this Peer's NodeID
-		nodeid = superpeer.join();
-
-		// Initialize the Logger
-		lg = new Logger("Peer:" + nodeid.toString());
-		lg.log(Level.FINEST, "Peer started.");
-
-		// Get Hasher object
-		lg.log(Level.FINEST, "Retrieving Hash object");
-		hasher = superpeer.getHasher();
-
-		// Register with the RMI Registry.
-		lg.log(Level.FINEST, "Binding to local RMI registry with name "
-				+ nodeid.toString());
-		Naming.rebind(nodeid.toString(), this);
-		
 		// Initialize the node cache
 		peercache = new HashMap<Key, PeerInterface>();
-		
+	
+		// Initialize word map
 		dict = new HashMap<String, String>();
-		
-		succ = superpeer.getSuccessor(nodeid);
 
-		// Notify Successor.
-		if(succ != null) {
-		    //lock!
-			getPeer(succ).notify(nodeid);
-		}
-		
-	       
-		myFingerEntry = new FingerEntry(nodeid,superpeer.getAddress(nodeid));
 
-		int mbits = hasher.getBitSize();
-		
-		System.out.println("++++++++++ size of mbits" + mbits);
-		updateFingerTable(mbits);
-		System.out.println("2.4");
-		
-		// TEST
-//		lg.log(Level.FINEST, "Testing RMI self call of getName 3- " + getPeer(nodeid).getName());
+		superpeer.lock();
+		  // Get this Peer's NodeID
+		  nodeid = superpeer.join();
+		  //Start logger
+		  lg = new Logger("Peer:" + nodeid.toString());
+		  lg.log(Level.FINEST, "Peer started.");
+
+		  // Register with the RMI Registry.
+		  lg.log(Level.FINEST, "Binding to local RMI registry with name "
+				+ nodeid.toString());
+		  Naming.rebind(nodeid.toString(), this);
+		  // Initialize our finger entry
+		  myFingerEntry = new FingerEntry(nodeid,superpeer.getAddress(nodeid));
+
+		  // Get Successor
+		  succ = superpeer.getSuccessor(nodeid);		
+		  // Get hasher
+		  lg.log(Level.FINEST, "Retrieving Hash object");
+		  hasher = superpeer.getHasher();
+		  // Set mbits
+		  int mbits = hasher.getBitSize();
+		  // Update finger table
+		  updateFingerTable(mbits);
+		superpeer.unlock();
+		lg.log(Level.FINEST, "Exit Critical Section");
+
 		
 		lg.log(Level.FINEST,
 				"Testing RMI self call of getName - "
 						+ getPeer(nodeid).getName());
-		// TEST
-		// superpeer.getPeers();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
+	    }
+	    catch (Exception e) {
+		e.printStackTrace();
+	    }
 	}
 	
 	private PeerInterface getPeer(Key node) throws Exception {
@@ -384,9 +377,10 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
           
  	public void updateFingerTable(int mbits)
  	{
+	    return ;
 	    // lock here
       	// crude way of constructing finger table for each node again.
-    	 if (succ == nodeid) {
+    	/* if (succ == nodeid) {
     		 constructFingerTable(mbits);
     		 return;
     	 }
@@ -397,7 +391,7 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
  			// TODO Auto-generated catch block
  			e.printStackTrace();
  			System.out.println("1");
- 		}
+			}*/
  	}
  
  	public void constructFingerTable(int mbits) 
