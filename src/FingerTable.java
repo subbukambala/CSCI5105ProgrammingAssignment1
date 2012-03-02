@@ -8,6 +8,9 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.PriorityQueue;
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * @todo Everything
@@ -20,15 +23,22 @@ public class FingerTable implements Serializable
 	FingerEntry myFingerEntry;
 	
 
-    public Key getSuccessor() { 
-	if ( myFingerEntry == null ) 
-	    return null; 
-	else 
-	    return myFingerEntry.getId();
+    public Key getSuccessor(Key key) { 
+	Iterator<FingerEntry> it = table.iterator();
+	FingerEntry fe = null;
+	while(it.hasNext()) {
+	    fe = it.next();
+	    if(fe.getId().compare(key)>0) break;
+    	}
+	it = table.iterator();
+	// Success is less than my key
+	if( fe == null && it.hasNext()) fe = it.next();
+	if(fe != null) return fe.getId();
+	else return null;
     }
 
 
-	public List<FingerEntry> table;
+    public Collection<FingerEntry> table;
 	
 	/**
 	 * Initializes with current node details.
@@ -41,60 +51,52 @@ public class FingerTable implements Serializable
 		myFingerEntry = new FingerEntry();
 		myFingerEntry.setId(id);
 		myFingerEntry.setIpAddress(ipAddress);
+		table = new PriorityQueue<FingerEntry>(5,new FingerEntryComparator());
 	}
-	
-	/**
-	 * Constructs init finger table with previously registered node details.
-	 * 
-	 * @param id
-	 * @param ipAddress
-	 */
-    public void InitFingerTable(Key id, String ipAddress) 
-    {
-    	table = new ArrayList<FingerEntry> ();
-    	FingerEntry entry = new FingerEntry();
-    	entry.setId(id);
-    	entry.setIpAddress(ipAddress);
-    } 
-    
     /**
 	 * Constructs init finger table with previously registered node details.
 	 * 
 	 * @param fe
 	 */
-    public void InitFingerTable(FingerEntry fe) 
-    {
-    	table = new ArrayList<FingerEntry> ();
-    	table.add(fe);
-    }
-    
-    /**
-	 * Constructs init finger table with previously registered node details.
-	 * 
-	 * @param fe
-	 */
-    public void AddFingerEntry(FingerEntry fe) 
+    public void addFingerEntry(FingerEntry fe) 
     {
     	table.add(fe);
     }
-    
-    /**
-     * Creates empty table in case of no node has been registered.
-     */
-    public void InitFingerTable() 
-    {
-    	table = new ArrayList<FingerEntry> ();
-    } 
-    
+        
     /**
      * Prints finger table
      */
     public void PrintFingerTable() 
     {
-    	for (Integer i = 0; i < table.size(); i++) {
-    		LOG.log(Level.INFO, table.get(i).getId() + "\t" 
-    			+ table.get(i).getIpAddress() + "\n");
+	Iterator<FingerEntry> it = table.iterator();
+	while(it.hasNext()) {
+	    FingerEntry fe = it.next();
+	    LOG.log(Level.INFO, fe.getId() + "\t" 
+    			+ fe.getIpAddress() + "\t" + fe.getStartWordKey() + "\t" + fe.getEndWordKey() + "\n");
     	}
     	
     } 
+
+
+    public Iterator<FingerEntry> iterator () { return table.iterator(); } 
+
+    public int size() {return table.size();}
+
+
+    public Key getClosestSuccessor(Key key) {
+	Iterator<FingerEntry> it = table.iterator();
+	while(it.hasNext()) {
+	    FingerEntry fe = it.next();
+        		
+	    // If key lies in range
+	    if (fe.getId().compare(key)==-1 && key.compare(fe.getId())==-1)
+		return fe.getId();
+	}
+	if( table.size() == 0 ) return null;
+	else {
+	    it = table.iterator();
+	    return it.next().getId();
+	}
+    }
+
 }

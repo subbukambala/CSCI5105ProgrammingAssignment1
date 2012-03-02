@@ -56,4 +56,9 @@ public class FingerEntry implements Serializable{
 	public Key getEndWordKey() {
 		return endWordKey;
 	}
+
+    public int compare(FingerEntry b) {
+	return id.compare(b.id);
+
+    }
 }

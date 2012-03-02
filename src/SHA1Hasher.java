@@ -8,15 +8,19 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.security.NoSuchAlgorithmException;
 import java.io.Serializable;
+import java.lang.Math.*;
+
 
 public class SHA1Hasher implements HasherInterface, Serializable
 {
     private MessageDigest sha;
+    private int bitsize;
     private BigInteger ringsize;
-    public SHA1Hasher (int _ringsize)
+    public SHA1Hasher (int _bitsize)
     {
 	sha = null;
-	ringsize = new BigInteger(Integer.toString(_ringsize));
+	bitsize = _bitsize;
+	ringsize = new BigInteger(Integer.toString((int)Math.pow(2,bitsize)));
     }
     /**
      * @note MessageDigest is not serializable.  To get around this
@@ -34,5 +38,7 @@ public class SHA1Hasher implements HasherInterface, Serializable
 	     new BigInteger(sha.digest( str.getBytes() )).abs().mod(ringsize)
 	    );
     }
+
+    public int getBitSize() {return bitsize;}
 
 }

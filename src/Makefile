@@ -44,15 +44,16 @@ CLASSES = \
 	CLI.java \
 	FingerTable.java \
 	FingerEntry.java \
+	FingerEntryComparator.java \
 	HasherInterface.java \
         Key.java \
+	KeyComparator.java \
 	Logger.java \
 	SHA1Hasher.java \
 	SuperPeer.java \
         SuperPeerInterface.java \
 	PeerInterface.java \
-	Peer.java \
-	
+	Peer.java
 
 
 #
