@@ -35,6 +35,10 @@ public class Key implements Serializable
 	id = BigInteger.ZERO;
     }
 
+    public BigInteger getId()
+    {
+    	return id;
+    }
     
     /**
      * Check if two Keys are equal.
@@ -50,7 +54,7 @@ public class Key implements Serializable
      */
     public int compare(Key b) {
 	return id.compareTo(b.id);
-    }
+	}
 
     /**
      * Convert this Key to a String.

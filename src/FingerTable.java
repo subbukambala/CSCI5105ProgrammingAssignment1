@@ -23,22 +23,7 @@ public class FingerTable implements Serializable
 	FingerEntry myFingerEntry;
 	
 
-    public Key getSuccessor(Key key) { 
-	Iterator<FingerEntry> it = table.iterator();
-	FingerEntry fe = null;
-	while(it.hasNext()) {
-	    fe = it.next();
-	    if(fe.getId().compare(key)>0) break;
-    	}
-	it = table.iterator();
-	// Success is less than my key
-	if( fe == null && it.hasNext()) fe = it.next();
-	if(fe != null) return fe.getId();
-	else return null;
-    }
-
-
-    public Collection<FingerEntry> table;
+	public Collection<FingerEntry> table;
 	
 	/**
 	 * Initializes with current node details.
@@ -68,16 +53,14 @@ public class FingerTable implements Serializable
      */
     public void PrintFingerTable() 
     {
-	Iterator<FingerEntry> it = table.iterator();
-	while(it.hasNext()) {
-	    FingerEntry fe = it.next();
-	    LOG.log(Level.INFO, fe.getId() + "\t" 
+    	Iterator<FingerEntry> it = table.iterator();
+    	while(it.hasNext()) {
+    		FingerEntry fe = it.next();
+    		LOG.log(Level.INFO, fe.getId() + "\t" 
     			+ fe.getIpAddress() + "\t" + fe.getStartWordKey() + "\t" + fe.getEndWordKey() + "\n");
     	}
-    	
     } 
-
-
+    	
     public Iterator<FingerEntry> iterator () { return table.iterator(); } 
 
     public int size() {return table.size();}

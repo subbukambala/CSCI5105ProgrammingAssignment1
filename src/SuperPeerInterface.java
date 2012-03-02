@@ -25,26 +25,35 @@ public interface SuperPeerInterface extends Remote {
     public HasherInterface getHasher() throws RemoteException;
 
 
+    public Key getSuccessor(Key nodeid)  throws RemoteException;
+    
     /**
      * @todo Document
      */
     public String getAddress(Key id) throws RemoteException;
 
-
     /**
      * @todo Document
      */
-    /**
-     * Returns a node service address (IPAddress + Node ID) 
-     */
-    //public String getNodeServiceAddress()  throws RemoteException;
     public FingerTable getInitialFingerTable(Key key) throws RemoteException,ServerNotActiveException;
 
+    /**
+     * Returns a randomly selected node service address (IPAddress + Node ID) 
+     */
+    //public String getNodeServiceAddress()  throws RemoteException;
+     
+    /**
+     * Returns the node service address (IPAddress + Node ID) 
+     */
+ //   public String getNodeServiceAddress(Key id) throws RemoteException;
 
     /**
      * @todo Document
      */
     public String[][] getPeers() throws Exception;
-
-
+    
+    /**
+     * Returns the Key bits size
+     */
+    public Integer getChordKeyBitsSize()  throws RemoteException;
 }

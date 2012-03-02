@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * @todo Everything..
  */
-public class FingerEntry implements Serializable{
+public class FingerEntry implements Serializable {
 	private Key id;
 	private String ipAddress;
 	private Key startWordKey;
@@ -57,8 +57,25 @@ public class FingerEntry implements Serializable{
 		return endWordKey;
 	}
 
-    public int compare(FingerEntry b) {
-	return id.compare(b.id);
-
+	@Override
+	public int hashCode(){
+		return id.getId().intValue();
+	}
+	
+	@Override
+	public boolean equals(Object o){
+		if (o instanceof FingerEntry) {
+			FingerEntry fe = (FingerEntry) o;
+			if (this.id.equals(fe.id)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	
+	public int compare(FingerEntry b) {
+		return id.compare(b.id);
     }
 }

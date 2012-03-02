@@ -61,8 +61,7 @@ public class CLI {
 	cli.addOption("l", "lookup", true, "Lookup a word from a particular peer.");
 	cli.addOption("f", "filename", true, "Load all definitions from a file from a particular peer.");
 	cli.addOption("P", "peerIP", true, "Specify the peer IP address. If none is provided, one will be choosen if required by the directive.");
-	cli.addOption("p", "peerID", true, "Specify the peer ID. If none is provided, one will be choosen if required by the directive. This should only be provided if the peerIP options has also been specified.");
-
+	
 	CommandLine commandLine = cli.parse(argv);
 	if( commandLine.hasOption('h') ) {
 	    cli.usage("");
@@ -143,7 +142,7 @@ public class CLI {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 	    }
-	    
+	    	
 	    System.exit(0);
 	}
 	if (commandLine.hasOption('f')) {
