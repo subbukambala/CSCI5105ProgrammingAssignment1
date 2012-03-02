@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * @todo Everything..
  */
-public class FingerEntry implements Serializable, Comparable<FingerEntry> {
+public class FingerEntry implements Serializable {
 	private Key id;
 	private String ipAddress;
 	private Key startWordKey;
@@ -59,13 +59,11 @@ public class FingerEntry implements Serializable, Comparable<FingerEntry> {
 
 	@Override
 	public int hashCode(){
-		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$ hash $$$$$$$$$$$$$$$$");
 		return id.getId().intValue();
 	}
 	
 	@Override
 	public boolean equals(Object o){
-		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$ equals $$$$$$$$$$$$$$$$");
 		if (o instanceof FingerEntry) {
 			FingerEntry fe = (FingerEntry) o;
 			if (this.id.equals(fe.id)) {
@@ -77,27 +75,7 @@ public class FingerEntry implements Serializable, Comparable<FingerEntry> {
 	}
 	
 	
-	@Override
-	public int compareTo(FingerEntry o) {
-		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$ compare $$$$$$$$$$$$$$$$");
-		if (id == null || o.id == null) {
-			return -1;
-		}
-		
-		if (id.equals(o.id)) {
-			return 0;
-		}
-		else if (id.leq(o.id)) {
-			
-			return -1;
-		} 
-		else {
-			return 1;
-		}
-	}
-
-    public int compare(FingerEntry b) {
-	return id.compare(b.id);
-
+	public int compare(FingerEntry b) {
+		return id.compare(b.id);
     }
 }

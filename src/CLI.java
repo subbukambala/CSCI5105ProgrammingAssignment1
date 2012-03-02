@@ -142,14 +142,7 @@ public class CLI {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 	    }
-	    
-				e.printStackTrace();
-			}  catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			
+	    	
 	    System.exit(0);
 	}
 	if (commandLine.hasOption('f')) {

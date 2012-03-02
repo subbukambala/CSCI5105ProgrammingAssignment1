@@ -23,14 +23,7 @@ public class FingerTable implements Serializable
 	FingerEntry myFingerEntry;
 	
 
-	    if(fe.getId().compare(key)>0) break;
-    	}
-	it = table.iterator();
-	// Success is less than my key
-	if( fe == null && it.hasNext()) fe = it.next();
-	if(fe != null) return fe.getId();
-	else return null;
-    public Collection<FingerEntry> table;
+	public Collection<FingerEntry> table;
 	
 	/**
 	 * Initializes with current node details.
@@ -60,25 +53,14 @@ public class FingerTable implements Serializable
      */
     public void PrintFingerTable() 
     {
-    	if (! table.contains(fe)) {
-    		System.out.println("adding....");
-	    FingerEntry fe = it.next();
-	    LOG.log(Level.INFO, fe.getId() + "\t" 
+    	Iterator<FingerEntry> it = table.iterator();
+    	while(it.hasNext()) {
+    		FingerEntry fe = it.next();
+    		LOG.log(Level.INFO, fe.getId() + "\t" 
     			+ fe.getIpAddress() + "\t" + fe.getStartWordKey() + "\t" + fe.getEndWordKey() + "\n");
     	}
-    }
-    	
     } 
-
-    	if (table == null) {
-    		System.out.println("\n\n\n\ntable is empty &&&&&&&&&&&&&&&&&&&");
-    		return;
-    	}
-    		System.out.println("key: " + table.get(i).getId());
-    		System.out.println("key: " + table.get(i).getIpAddress());
-    		System.out.println("key: " + table.get(i).getStartWordKey().getId());
-    		System.out.println("key: " + table.get(i).getEndWordKey().getId());
-
+    	
     public Iterator<FingerEntry> iterator () { return table.iterator(); } 
 
     public int size() {return table.size();}

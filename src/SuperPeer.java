@@ -16,6 +16,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 
 
+import java.util.Collections;
 import java.util.PriorityQueue;
 import java.util.Collection;
 import java.util.Iterator;
@@ -58,38 +59,26 @@ public class SuperPeer extends UnicastRemoteObject implements
     	return mbits;
     }
     
-    /**
-     * This methods inserts into peertable in the increasing order key.
-     */
-    private void insertNewNode(FingerEntry fe)
-    {
-    	System.out.println("insert new node. calleld...............++++++++++==============");
-    	// Search for the non-existent item
-    	int index = Collections.binarySearch(peertable, fe);
-    	
-    	// Add the non-existent item to the list
-    	if (index < 0) {
-    		peertable.add(-index - 1, fe);
-    	}
-    }
     
     public Key getSuccessor(Key nodeid)  throws RemoteException
     {
     	System.out.println(" get successor in superpeer");
-    	
-    	FingerEntry fe = new FingerEntry();
-    	fe.setId(nodeid);
-    	
-    	// Search for the non-existent item
-    	int index = Collections.binarySearch(peertable, fe);
-    	
-    	// Add the non-existent item to the list
-    	if (index > 0) {
-    		return peertable.get(index - 1).getId();
+    	Iterator<FingerEntry> it = peertable.iterator();
+    	FingerEntry fe;
+    	while(it.hasNext()) {
+    		fe = it.next();
+    		if(fe.getId().compare(nodeid)>0) {
+    			return fe.getId();
+    		}
     	}
-    	else {
-    		return null;
+    	it = peertable.iterator();
+    	if(it.hasNext()) {
+    		fe = it.next();
+    		if(!fe.equals(nodeid)) return fe.getId();
     	}
+    	
+    	return null;
+    	
     }
     
     /**
@@ -118,7 +107,7 @@ public class SuperPeer extends UnicastRemoteObject implements
 		synchronized (this) {
 			// XXX: ID collisions need to be detected using peertable!
 			rv = hasher.getHash(new Integer(prng.nextInt()).toString());
-			insertNewNode(new FingerEntry(rv, RemoteServer.getClientHost()));
+			peertable.add(new FingerEntry(rv, RemoteServer.getClientHost()));
 			lg.log(Level.FINEST, "Allocating Node ID " + rv.toString() + ".");
 		}
 		return rv;
@@ -197,19 +186,19 @@ public class SuperPeer extends UnicastRemoteObject implements
      */
     public String[][] getPeers() throws Exception
     {
-	String [][] rv = new String[peertable.size()][2];
-	FingerEntry fe = null;
-	synchronized (this) {
-	    Iterator<FingerEntry> it = peertable.iterator();
-	    int i = 0;
-	    while(it.hasNext()) {
-		fe = it.next();
-		rv[i][0] = fe.getId().toString();
-		rv[i][1] = fe.getIpAddress();
-		i++;
-	    }
-	}
-	return rv;
+		String [][] rv = new String[peertable.size()][2];
+		FingerEntry fe = null;
+		synchronized (this) {
+		    Iterator<FingerEntry> it = peertable.iterator();
+		    int i = 0;
+		    while(it.hasNext()) {
+			fe = it.next();
+			rv[i][0] = fe.getId().toString();
+			rv[i][1] = fe.getIpAddress();
+			i++;
+		    }
+		}
+		return rv;
     }
 
 
@@ -233,10 +222,13 @@ public class SuperPeer extends UnicastRemoteObject implements
 	    	//Service is uniquely identified by IP address and node ID
 	    	return peertable.get(random).getIpAddress() + "/" + peertable.get(random).getId();
     	}
-    */
+    
     		throw new RemoteException("No node is available to serve the request");
     	}
     }
+    
+   
+    
     @Override
     public String getNodeServiceAddress(Key id)  throws RemoteException
     {
@@ -257,6 +249,8 @@ public class SuperPeer extends UnicastRemoteObject implements
     	
     	return null;
     }
+     */
+    
     /**
      * @todo Everything
      */
