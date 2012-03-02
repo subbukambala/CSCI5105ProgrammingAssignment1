@@ -37,7 +37,7 @@ public class CLI {
     {
 	ArgumentHandler cli = new ArgumentHandler
 	    (
-	     "CLI [-hL] [-l word] [-f file] peer/super"
+	     "CLI [-hL] [-l word] [-f file] [-p] peer/super"
 	     ,"CLI provides remote access to peers and superpeers within this CHORD implementation."
 	     ,"Bala Subrahmanyam Kambala, Daniel William DaCosta - GPLv3 (http://www.gnu.org/copyleft/gpl.html)"
 	     );
@@ -45,7 +45,8 @@ public class CLI {
 	cli.addOption("L", "listpeers", false, "Calls the RMI getPeer on the provided host. It will list all known peers.");
 	cli.addOption("l", "lookup", true, "Lookup a word from a particular peer.");
 	cli.addOption("f", "filename", true, "Load all definitions from a file from a particular peer.");
-
+	cli.addOption("p", "peerdata", false, "Print data from all peers.");
+	
 	CommandLine commandLine = cli.parse(argv);
 	if( commandLine.hasOption('h') ) {
 	    cli.usage("");
@@ -57,6 +58,22 @@ public class CLI {
 	    System.exit(1);
 	}
 
+		if (commandLine.hasOption('p')) {
+			try {
+				SuperPeerInterface superpeer = (SuperPeerInterface) Naming
+						.lookup("//" + commandLine.getArgs()[0] + "/SuperPeer");
+
+				String nodeService = superpeer.getNodeServiceAddress();
+				PeerInterface peer = (PeerInterface) Naming.lookup("//"
+						+ nodeService);
+
+				peer.printPeerData();
+			} catch (Exception e) {
+				System.out.println("SuperPeer failed: " + e);
+				System.exit(1);
+			}
+
+		}
 	if( commandLine.hasOption('L') ) {
 	    try {   
 		// Find the SuperPeer

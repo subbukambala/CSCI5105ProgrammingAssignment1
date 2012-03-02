@@ -71,6 +71,25 @@ public class SuperPeer extends UnicastRemoteObject implements
     	}
     }
     
+    public Key getSuccessor(Key nodeid)  throws RemoteException
+    {
+    	System.out.println(" get successor in superpeer");
+    	
+    	FingerEntry fe = new FingerEntry();
+    	fe.setId(nodeid);
+    	
+    	// Search for the non-existent item
+    	int index = Collections.binarySearch(peertable, fe);
+    	
+    	// Add the non-existent item to the list
+    	if (index > 0) {
+    		return peertable.get(index - 1).getId();
+    	}
+    	else {
+    		return null;
+    	}
+    }
+    
     /**
      * @todo Everything
      */
@@ -177,14 +196,14 @@ public class SuperPeer extends UnicastRemoteObject implements
     	if(peertable.size() != 0) {
     		int random = 0;
 	    	if (peertable.size() == 1) {
-	    		random = 1;
+	    		random = 0;
 	    	}
 	    	else {
 	    		random = (int)(peertable.size() + (Math.random() * 37)) % peertable.size();
 	    	}
 	    	
 	    	//Service is uniquely identified by IP address and node ID
-	    	return peertable.get(random - 1).getIpAddress() + "/" + peertable.get(random - 1).getId();
+	    	return peertable.get(random).getIpAddress() + "/" + peertable.get(random).getId();
     	}
     	else {
     		throw new RemoteException("No node is available to serve the request");

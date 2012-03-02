@@ -131,18 +131,22 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		lg.log(Level.FINEST, "Getting initial finger table from superpeer");
 		ft = superpeer.getInitialFingerTable(nodeid);
 		
-		succ = getSuccessor(nodeid);
+		succ = superpeer.getSuccessor(nodeid);
 
 		// Notify Successor.
 		if(succ != null) {
 			getPeer(succ).notify(nodeid);
 		}
 		
+		notifySuccessor();
+		notifyPredecessor();
+		
 		int mbits = superpeer.getChordKeyBitsSize();
 		
 		System.out.println("++++++++++ size of mbits" + mbits);
 		updateFingerTable(mbits);
 		System.out.println("2.4");
+		
 		
 		/*timer = new java.util.Timer();
 		stabilizer = new Stabilize(this);
@@ -254,11 +258,13 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 
 			fe.setId(nodeid);
 
-			fe.setIpAddress(RemoteServer.getClientHost());
+			fe.setIpAddress(superpeer.getAddress(nodeid));
 
 			BigInteger prevEndId = BigInteger.ZERO;
 
-			prevEndId = getPeer(pred).getFingerEntry().getEndWordKey().getId();
+			if (pred != null) {
+				prevEndId = getPeer(pred).getFingerEntry().getEndWordKey().getId();
+			}
 
 			Key endKey = new Key(prevEndId.add(BigInteger.ONE));
 
@@ -284,19 +290,21 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
      */
     private void notifySuccessor() throws RemoteException 
     {
-    	try {
-			PeerInterface peer = (PeerInterface) Naming.lookup("//"
-					+ superpeer.getNodeServiceAddress(succ));
-			
-			peer.updatePredecessor(nodeid);
-			
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NotBoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+    	if (succ != null) {
+	    	try {
+				PeerInterface peer = (PeerInterface) Naming.lookup("//"
+						+ superpeer.getNodeServiceAddress(succ));
+				
+				peer.updatePredecessor(nodeid);
+				
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NotBoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
     }
     
     /**
@@ -306,18 +314,20 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
      */
     private void notifyPredecessor() throws RemoteException 
     {
-    	try {
-			PeerInterface peer = (PeerInterface) Naming.lookup("//"
-					+ superpeer.getNodeServiceAddress(pred));
-			
-			peer.updateSuccessor(nodeid);
-			
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NotBoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if (pred != null) {
+			try {
+				PeerInterface peer = (PeerInterface) Naming.lookup("//"
+						+ superpeer.getNodeServiceAddress(pred));
+
+				peer.updateSuccessor(nodeid);
+
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NotBoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
     }
     
@@ -354,13 +364,26 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 				Key key = new Key(BigInteger.valueOf(fingerId));
 				Key succNode = null;
 
+				// returns null if successor of key is same node
 				succNode = getSuccessor(key);
+				System.out.println("successor :: " + succNode);
 
 				if (succNode == null) {
+					System.out.println("ft 1: " + fe.getId());
+		    		System.out.println("key 2: " + fe.getIpAddress());
+		    		System.out.println("key 3: " + fe.getStartWordKey().getId());
+		    		System.out.println("key 4: " + fe.getEndWordKey().getId());
+		    		
 					ft.AddFingerEntry(fe);
 				} 
 				else {
-					ft.AddFingerEntry(getPeer(succNode).getFingerEntry());
+					FingerEntry peerfe = getPeer(succNode).getFingerEntry();
+					System.out.println(" peer ft 1: " + peerfe.getId());
+		    		System.out.println("key 2.1: " + peerfe.getIpAddress());
+		    		System.out.println("key 3.1: " + peerfe.getStartWordKey().getId());
+		    		System.out.println("key 4.1: " + peerfe.getEndWordKey().getId());
+		    		
+					ft.AddFingerEntry(peerfe);
 				}
 			}
 			
@@ -392,6 +415,8 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
     @Override
     public String lookup(String word, Level logLevel) throws Exception
     {
+    	printPeerData();
+    	
     	lg.log(Level.FINEST, "In lookup method");
     	
     	Key key = hasher.getHash(word);
@@ -486,6 +511,21 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
     	ft.PrintFingerTable();
     }
 
+    @Override
+    public void printPeerData() throws RemoteException {
+    	try {
+			if (succ == null) {
+				printData();
+			}
+			else {
+				getPeer(succ).printData();
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+	    
 	/**
 	 * @todo Everything
 	 */

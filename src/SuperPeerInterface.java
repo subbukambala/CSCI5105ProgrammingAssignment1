@@ -25,6 +25,8 @@ public interface SuperPeerInterface extends Remote {
     public HasherInterface getHasher() throws RemoteException;
 
 
+    public Key getSuccessor(Key nodeid)  throws RemoteException;
+    
     /**
      * @todo Document
      */

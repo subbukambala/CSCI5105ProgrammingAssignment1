@@ -13,6 +13,8 @@ import java.util.logging.Level;
 public interface PeerInterface extends Remote
 {
 
+	public void printPeerData() throws Exception;
+	
     /**
      * @return The name of this peer as a String.
      */

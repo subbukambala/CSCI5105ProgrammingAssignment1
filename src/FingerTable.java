@@ -85,7 +85,15 @@ public class FingerTable implements Serializable
      */
     public void PrintFingerTable() 
     {
+    	if (table == null) {
+    		System.out.println("\n\n\n\ntable is empty &&&&&&&&&&&&&&&&&&&");
+    		return;
+    	}
     	for (Integer i = 0; i < table.size(); i++) {
+    		System.out.println("key: " + table.get(i).getId());
+    		System.out.println("key: " + table.get(i).getIpAddress());
+    		System.out.println("key: " + table.get(i).getStartWordKey().getId());
+    		System.out.println("key: " + table.get(i).getEndWordKey().getId());
     		LOG.log(Level.INFO, table.get(i).getId() + "\t" 
     			+ table.get(i).getIpAddress() + "\t" + table.get(i).getStartWordKey().getId() + "\t" + table.get(i).getEndWordKey() + "\n");
     	}
