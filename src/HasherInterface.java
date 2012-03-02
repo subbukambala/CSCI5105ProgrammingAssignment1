@@ -8,4 +8,5 @@ import java.security.NoSuchAlgorithmException;
 public interface HasherInterface
 {
     public Key getHash(String str) throws NoSuchAlgorithmException;
+    public int getBitSize();
 }

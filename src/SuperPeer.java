@@ -15,10 +15,10 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+
+import java.util.PriorityQueue;
+import java.util.Collection;
+import java.util.Iterator;
 import java.security.SecureRandom;
 import java.security.NoSuchAlgorithmException;
 import java.lang.Math.*;
@@ -34,7 +34,7 @@ public class SuperPeer extends UnicastRemoteObject implements
 	 * We would like node ID's to be unique. This table will be used to ensure
 	 * this.
 	 */
-	private List<FingerEntry> peertable;
+    private Collection<FingerEntry> peertable;
 
 	/**
 	 * Random number generator for Node IDs.
@@ -45,6 +45,8 @@ public class SuperPeer extends UnicastRemoteObject implements
 	 * SHA1 Hasher.
 	 */
 	private HasherInterface hasher;
+
+    
 
     /**
      * The m-bits
@@ -97,9 +99,9 @@ public class SuperPeer extends UnicastRemoteObject implements
     {
 	lg = new Logger("SuperPeer");
 	mbits = _mbits;
-	peertable = new ArrayList<FingerEntry>();
+	peertable = new PriorityQueue<FingerEntry>(5,new FingerEntryComparator());
 	prng = SecureRandom.getInstance("SHA1PRNG");
-	hasher = new SHA1Hasher((int)Math.pow(2,mbits));
+	hasher = new SHA1Hasher(mbits);
 	lg.log(Level.FINEST,"SuperPeer started.");
     }
 
@@ -127,7 +129,7 @@ public class SuperPeer extends UnicastRemoteObject implements
 	 */
 	public HasherInterface getHasher() throws RemoteException {
 
-	    return new SHA1Hasher((int)Math.pow(2,mbits));
+	    return new SHA1Hasher(mbits);
 	}
 
 	/**
@@ -141,11 +143,12 @@ public class SuperPeer extends UnicastRemoteObject implements
 		lg.log(Level.FINER, "getAddress Called.");
 		FingerEntry fe = null;
 		synchronized (this) {
-		    for (Integer i = 0; i < peertable.size(); i++) {
-			lg.log(Level.FINEST, "getAddress - Checking " + peertable.get(i).getId().toString()+" for match ...");
-			if (peertable.get(i).getId().equals(id)) {
+		    Iterator<FingerEntry> it = peertable.iterator();
+		    while(it.hasNext()) {
+			fe = it.next();
+			lg.log(Level.FINEST, "getAddress - Checking " + fe.getId().toString()+" for match ...");
+			if (fe.getId().equals(id)) {
 			    lg.log(Level.FINEST, "getAddress - match found.");
-			    fe = peertable.get(i);
 			    return fe.getIpAddress();
 			}
 		    }
@@ -160,17 +163,30 @@ public class SuperPeer extends UnicastRemoteObject implements
 	 * @todo Document
 	 */
     public FingerTable getInitialFingerTable(Key key) throws RemoteException,ServerNotActiveException {
+	lg.log(Level.FINER, "getInitialFingerTable Called.");
 		FingerTable table = new FingerTable(key, RemoteServer.getClientHost());
-		if (peertable.size() == 1) {
-		    table.InitFingerTable();
-		}
-		else {
-		    synchronized(this) {
-			FingerEntry fe = peertable.get(peertable.size()-1);
-			table.InitFingerTable(fe);
+	FingerEntry fe = null;
+	FingerEntry head = null;
+	synchronized(this) {
+	    if (peertable.size()>1){
+		    Iterator<FingerEntry> it = peertable.iterator();
+		    while(it.hasNext()) {
+			fe = it.next();
+			if(head == null) head = fe;
+			//Is this a successor
+			lg.log(Level.FINER, "getInitialFingerTable - "+fe.getId().toString()+" == "+key.toString()+"->"+Integer.toString(fe.getId().compare(key)));
+			if (fe.getId().compare(key)>0) {
+			    break;
+			}
+		    }
+		    if (fe!= null) {
+			if (fe==null) fe = head;
+			table.addFingerEntry(fe);		    
+		    }
 		    }
 		}
 		return table;
+
     }
 
 
@@ -182,14 +198,26 @@ public class SuperPeer extends UnicastRemoteObject implements
     public String[][] getPeers() throws Exception
     {
 	String [][] rv = new String[peertable.size()][2];
-	for (int i = 0; i < peertable.size(); i++) {
-	    lg.log(Level.FINEST, "getAddress - Checking " + peertable.get(i).getId().toString()+" for match ...");
-	    rv[i][0] = peertable.get(i).getId().toString();
-	    rv[i][1] = peertable.get(i).getIpAddress();
+	FingerEntry fe = null;
+	synchronized (this) {
+	    Iterator<FingerEntry> it = peertable.iterator();
+	    int i = 0;
+	    while(it.hasNext()) {
+		fe = it.next();
+		rv[i][0] = fe.getId().toString();
+		rv[i][1] = fe.getIpAddress();
+		i++;
+	    }
 	}
 	return rv;
     }
 
+
+    /** 
+     * I am not really sure what this method is suppose to do but I suspect I already implemented it.
+     * We can talk about this later today
+   
+     
     @Override
     public String getNodeServiceAddress()  throws RemoteException
     {
@@ -205,11 +233,10 @@ public class SuperPeer extends UnicastRemoteObject implements
 	    	//Service is uniquely identified by IP address and node ID
 	    	return peertable.get(random).getIpAddress() + "/" + peertable.get(random).getId();
     	}
-    	else {
+    */
     		throw new RemoteException("No node is available to serve the request");
     	}
     }
-    
     @Override
     public String getNodeServiceAddress(Key id)  throws RemoteException
     {
@@ -230,7 +257,6 @@ public class SuperPeer extends UnicastRemoteObject implements
     	
     	return null;
     }
-
     /**
      * @todo Everything
      */

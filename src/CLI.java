@@ -28,16 +28,31 @@ import org.apache.commons.cli.HelpFormatter;
  */
 public class CLI {
 
-	private static final Logger LOG = new Logger("CLI");
+    private static final Logger LOG = new Logger("CLI");
 	
+
+    /**
+     * @todo Everything
+     */
+    public static String[] pickPeer(String[][] table, String pip)
+    {
+	for(int i = 0; i< table.length; i++){
+	    if(pip != null && table[i][1] == pip) return table[i];
+	    else return table[i];
+	}
+	return null;
+    }
+
     /**
      * @todo Everything
      */
     public static void main (String[] argv) 
     {
+	String pIP = "";
+	String pID = "";
 	ArgumentHandler cli = new ArgumentHandler
 	    (
-	     "CLI [-hL] [-l word] [-f file] [-p] peer/super"
+	     "CLI [-hL] [-l word] [-f file] [superpeer address]  [-P peer address] [-p peer ID])"
 	     ,"CLI provides remote access to peers and superpeers within this CHORD implementation."
 	     ,"Bala Subrahmanyam Kambala, Daniel William DaCosta - GPLv3 (http://www.gnu.org/copyleft/gpl.html)"
 	     );
@@ -45,7 +60,7 @@ public class CLI {
 	cli.addOption("L", "listpeers", false, "Calls the RMI getPeer on the provided host. It will list all known peers.");
 	cli.addOption("l", "lookup", true, "Lookup a word from a particular peer.");
 	cli.addOption("f", "filename", true, "Load all definitions from a file from a particular peer.");
-	cli.addOption("p", "peerdata", false, "Print data from all peers.");
+	cli.addOption("P", "peerIP", true, "Specify the peer IP address. If none is provided, one will be choosen if required by the directive.");
 	
 	CommandLine commandLine = cli.parse(argv);
 	if( commandLine.hasOption('h') ) {
@@ -53,28 +68,34 @@ public class CLI {
 	    System.exit(0);
 	}
 
-	if( commandLine.getArgs().length == 0) {
-	    cli.usage("\nNo peer provided!\n");
-	    System.exit(1);
+
+	if (commandLine.hasOption('P')) {
+	    String ip = commandLine.getOptionValue('P');
+	    if (ip == null) {
+		cli.usage("\nNo peer IP provided!\n");
+		System.exit(1);
+	    }
+	    pIP = ip;
 	}
 
-		if (commandLine.hasOption('p')) {
-			try {
-				SuperPeerInterface superpeer = (SuperPeerInterface) Naming
-						.lookup("//" + commandLine.getArgs()[0] + "/SuperPeer");
+	if (commandLine.hasOption('p')) {
+	    String id = commandLine.getOptionValue('p');
+	    if (id == null) {
+		cli.usage("\nNo peer IP provided!\n");
+		System.exit(1);
+	    }
+	    if( pIP == null ) {
+		cli.usage("\nID provided without IP!\n");
+		System.exit(1);
+	    }
+	    pID = id;
+	}
 
-				String nodeService = superpeer.getNodeServiceAddress();
-				PeerInterface peer = (PeerInterface) Naming.lookup("//"
-						+ nodeService);
-
-				peer.printPeerData();
-			} catch (Exception e) {
-				System.out.println("SuperPeer failed: " + e);
-				System.exit(1);
-			}
-
-		}
 	if( commandLine.hasOption('L') ) {
+	    if( commandLine.getArgs().length == 0) {
+		cli.usage("\nNo superpeer provided!\n");
+		System.exit(1);
+	    }
 	    try {   
 		// Find the SuperPeer
 		SuperPeerInterface superpeer = (SuperPeerInterface) Naming.lookup("//" + commandLine.getArgs()[0] + "/SuperPeer");
@@ -88,39 +109,40 @@ public class CLI {
 	    }
 	    System.exit(0);
 	}
-		if (commandLine.hasOption('l')) {
-			String word = commandLine.getOptionValue('l');
-			if (word == null) {
-				cli.usage("\nNo word provided!\n");
-				System.exit(1);
-			}
-			// call lookup RMI service to find a meaning of word.
-			System.out.println(word + "...word");
-			
-			
-			
-			SuperPeerInterface superpeer;
-			try {
-				superpeer = (SuperPeerInterface) Naming
-				.lookup("//" + commandLine.getArgs()[0] + "/SuperPeer");
-			
-
-				String nodeService = superpeer.getNodeServiceAddress();
-				PeerInterface peer = (PeerInterface) Naming.lookup("//"
-						+ nodeService);
-			
-				
-				String meaning = peer.lookup(word, Level.INFO);
-				System.out.println(meaning);
-			
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NotBoundException e) {
-				// TODO Auto-generated catch block
+	// call lookup RMI service to find a meaning of word.
+	if (commandLine.hasOption('l')) {
+	    String word = commandLine.getOptionValue('l');
+	    if (word == null) {
+		cli.usage("\nNo word provided!\n");
+		System.exit(1);
+	    }		
+	    SuperPeerInterface superpeer;
+	    try {
+		superpeer = (SuperPeerInterface) Naming
+		    .lookup("//" + commandLine.getArgs()[0] + "/SuperPeer");
+		if(pID==null) {
+		    String[] rv = pickPeer(superpeer.getPeers(),pIP);
+		    pIP = rv[1];
+		    pID = rv[0];
+		}
+		PeerInterface peer = (PeerInterface) Naming.lookup("//"+pIP+"/"+pID);	
+		String meaning = peer.lookup(word, Level.INFO);
+		System.out.println(meaning);
+ 		
+	    } catch (MalformedURLException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	    } catch (RemoteException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	    } catch (NotBoundException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+ 			}  catch (Exception e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	    }
+	    
 				e.printStackTrace();
 			}  catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -128,62 +150,64 @@ public class CLI {
 			}
 			
 			
-			System.exit(0);
+	    System.exit(0);
+	}
+	if (commandLine.hasOption('f')) {
+	    try {
+		String filePath = commandLine.getOptionValue('f');
+		if (filePath == null) {
+		    cli.usage("\nNo file provided!\n");
+		    System.exit(1);
 		}
-		if (commandLine.hasOption('f')) {
-			try {
-				String filePath = commandLine.getOptionValue('f');
-				if (filePath == null) {
-					cli.usage("\nNo file provided!\n");
-					System.exit(1);
-				}
+		
+		LOG.log(Level.FINEST, "File path: " + filePath);
+		Map<String, String> dict = null;
+		
+		dict = CLI.readFile(filePath);
+		
+		SuperPeerInterface superpeer = (SuperPeerInterface) Naming
+		    .lookup("//" + commandLine.getArgs()[0] + "/SuperPeer");
 
-				LOG.log(Level.FINEST, "File path: " + filePath);
-				Map<String, String> dict = null;
+		if(pID==null) {
+		    String[] rv = pickPeer(superpeer.getPeers(),pIP);
+		    pIP = rv[1];
+		    pID = rv[0];
+		}
+		PeerInterface peer = (PeerInterface) Naming.lookup("//"+pIP+"/"+pID);	
+		Iterator it = dict.entrySet().iterator();
+		while (it.hasNext()) {
+		    Map.Entry pairs = (Map.Entry) it.next();
+		    System.out.println(pairs.getKey() + " = "
+				       + pairs.getValue());
 
-				dict = CLI.readFile(filePath);
+		    // XXX:: logging option should be provided by user
+		    peer.insert(pairs.getKey().toString(), pairs.getValue()
+				.toString(), Level.INFO);
+		}
+		System.exit(0);
 
-				SuperPeerInterface superpeer = (SuperPeerInterface) Naming
-						.lookup("//" + commandLine.getArgs()[0] + "/SuperPeer");
+	    } catch (FileNotFoundException fne) {
 
-				String nodeService = superpeer.getNodeServiceAddress();
-				PeerInterface peer = (PeerInterface) Naming.lookup("//"
-						+ nodeService);
-
-				Iterator it = dict.entrySet().iterator();
-				while (it.hasNext()) {
-					Map.Entry pairs = (Map.Entry) it.next();
-					System.out.println(pairs.getKey() + " = "
-							+ pairs.getValue());
-
-					// XXX:: logging option should be provided by user
-					peer.insert(pairs.getKey().toString(), pairs.getValue()
-							.toString(), Level.INFO);
-				}
-				System.exit(0);
-
-			} catch (FileNotFoundException fne) {
-
-				fne.printStackTrace();
+		fne.printStackTrace();
 				cli.usage("\nError opening file!\n");
 				System.exit(1);
-
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NotBoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (Exception e) {
-
-				e.printStackTrace();
-				cli.usage("\nError in input file processing!\n");
-				System.exit(1);
-			}
-		}
+				
+	    } catch (MalformedURLException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	    } catch (RemoteException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	    } catch (NotBoundException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	    } catch (Exception e) {
+		
+		e.printStackTrace();
+		cli.usage("\nError in input file processing!\n");
+		System.exit(1);
+	    }
+	}
 	
 	cli.usage("\nNo directive provided!\n");
 	System.exit(1);

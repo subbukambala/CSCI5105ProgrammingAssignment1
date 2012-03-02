@@ -95,4 +95,9 @@ public class FingerEntry implements Serializable, Comparable<FingerEntry> {
 			return 1;
 		}
 	}
+
+    public int compare(FingerEntry b) {
+	return id.compare(b.id);
+
+    }
 }

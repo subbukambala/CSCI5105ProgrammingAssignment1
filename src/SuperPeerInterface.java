@@ -40,7 +40,7 @@ public interface SuperPeerInterface extends Remote {
     /**
      * Returns a randomly selected node service address (IPAddress + Node ID) 
      */
-    public String getNodeServiceAddress()  throws RemoteException;
+    //public String getNodeServiceAddress()  throws RemoteException;
      
     /**
      * Returns the node service address (IPAddress + Node ID) 

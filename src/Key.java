@@ -3,6 +3,7 @@
  * @license GPLv3 (http://www.gnu.org/copyleft/gpl.html)
  * @descriptrion TBD
  */
+import java.util.Comparator;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.io.Serializable;
@@ -20,7 +21,18 @@ public class Key implements Serializable
      */
     public Key (BigInteger _id) 
     {
-    	id = _id;
+    	id = new BigInteger(_id.toByteArray());
+    }
+
+
+    public Key(Key k)
+    {
+	id = new BigInteger(k.id.toByteArray());
+    }
+
+    public Key() {
+
+	id = BigInteger.ZERO;
     }
 
     public BigInteger getId()
@@ -35,13 +47,13 @@ public class Key implements Serializable
     {
     	return (id.equals(b.id));
     }
-    
+
     /**
-     * Check id is less than b
+     * @return -1 if less than, 0 if equal, 1 if greater
+     * NOTE: <=0 is less than or equal, >=0 is greater than or equal.
      */
-    public boolean leq(Key b)
-    {
-    	return id.compareTo(b.id)<=0;
+    public int compare(Key b) {
+	return id.compareTo(b.id);
 	}
 
     /**
@@ -50,6 +62,21 @@ public class Key implements Serializable
     public String toString()
     {
     	return id.toString();
+    }
+
+    public Key succ() {
+
+	return new Key(id.add(BigInteger.ONE));
+    }
+
+    public Key add(Key k) {
+
+	return new Key(id.add(k.id));
+    }
+
+    public Key mod(Key k) {
+
+	return new Key(id.mod(k.id));
     }
 
 }
