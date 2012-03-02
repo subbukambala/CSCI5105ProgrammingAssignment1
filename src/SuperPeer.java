@@ -107,7 +107,7 @@ public class SuperPeer extends UnicastRemoteObject implements
 		synchronized (this) {
 			// XXX: ID collisions need to be detected using peertable!
 			rv = hasher.getHash(new Integer(prng.nextInt()).toString());
-			peertable.add(new PeerInfo(rv.succ(), RemoteServer.getClientHost()));
+			peertable.add(new PeerInfo(rv, RemoteServer.getClientHost()));
 			lg.log(Level.FINEST, "Allocating Node ID " + rv.toString() + ".");
 		}
 		return rv;

@@ -89,7 +89,7 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		// Register with the RMI Registry.
 		lg.log(Level.FINEST, "Binding to local RMI registry with name "
 				+ nodeid.toString());
-		Naming.rebind(nodeid.toString(), this);
+		Naming.bind("fdsfds", this);
 		
 		// Initialize the node cache
 		peercache = new HashMap<Key, PeerInterface>();
