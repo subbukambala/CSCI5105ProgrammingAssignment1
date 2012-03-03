@@ -1,16 +1,30 @@
-TO BE DONE.
+Authors:
+--------
+1) Daniel William DaCosta
+   Student ID:4433217
+   email: chaosape@gmail.com
+
+2) Bala Subrahmanyam Kambala
+   Student ID: 4451379
+   email: kamb0024@umn.edu
+
 
 TO BUILD:
+---------
 cd src/
 make
 
 TO RUN SUPER PEER:
-scripts/RunSuperPeer.sh [This script is path agnostic]
+../scripts/RunSuperPeer.sh
 
-TO RUN PEER:
-scripts/RunPeer.sh [This script is path agnostic]
+TO RUN PEER: (To run several peers, run this script on different machines)
+../scripts/RunPeer.sh 
 
-TO RUN CLI: (NOTE: This is currently very basic)
-scripts/RunCLI.sh -l localhost [This script is path agnostic]
+TO RUN CLIENT: ( -h option displays help documentation on commands)
+../scripts/RunCLI.sh [-hL] [-l word] [-f file] [superpeer address]  [-P peer address] [-p peer ID]
 
-Both will output some messages.
+Example: 
+>../scripts/RunCLI.sh -L localhost 
+This command prints a list of peers which are registered to superpeer(binded on localhost) 
+
+
