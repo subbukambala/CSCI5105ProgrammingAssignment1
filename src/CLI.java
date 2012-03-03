@@ -54,12 +54,18 @@ public class CLI {
                 String pIP = null;
 		// peer id
                 String pID = null;
+
+		// verbose
+		boolean verbose = false;
+
                 ArgumentHandler cli = new ArgumentHandler
                         (
                          "CLI [-hLd] [-l word] [-f file] [superpeer address]  [-P peer address] [-p peer ID])"
                          ,"CLI provides remote access to peers and superpeers within this CHORD implementation."
                          ,"Bala Subrahmanyam Kambala, Daniel William DaCosta - GPLv3 (http://www.gnu.org/copyleft/gpl.html)"
                          );
+		
+                cli.addOption("v", "verbose", false, "When set insert and lookup will output log messages.");
                 cli.addOption("h", "help", false, "Print this usage information.");
                 cli.addOption("L", "listpeers", false, "Calls the RMI getPeer on the provided host. It will list all known peers.");
                 cli.addOption("l", "lookup", true, "Lookup a word from a particular peer.");
@@ -87,6 +93,12 @@ public class CLI {
                         }
                         pIP = ip;
                 }
+
+		// verbosity
+                if (commandLine.hasOption('v')) {
+			verbose=true;
+                }
+
 
 		// Peer id specified
                 if (commandLine.hasOption('p')) {
@@ -246,8 +258,10 @@ public class CLI {
                                                            + pairs.getValue());
 
                                         // XXX:: logging option should be provided by user
+					Level lv = Level.FINE;
+					if(verbose) lv = Level.INFO;
                                         peer.insert(pairs.getKey().toString(), pairs.getValue()
-                                                    .toString(), Level.INFO);
+                                                    .toString(), lv);
                                 }
                                 System.exit(0);
 
