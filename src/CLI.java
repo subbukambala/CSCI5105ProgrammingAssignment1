@@ -77,6 +77,14 @@ public class CLI {
 
                 CommandLine commandLine = cli.parse(argv);
 
+		try {
+			SuperPeerInterface superpeer = (SuperPeerInterface) Naming
+				.lookup("//" + commandLine.getArgs()[0] + "/SuperPeer");
+		} catch(Exception e) {
+			cli.usage("\nNo Superpeer specified, no SuperPeer runnning, or bad SuperPeer address.\n");
+                        System.exit(1);
+		}
+
 		// Help option
                 if( commandLine.hasOption('h') ) {
                         cli.usage("");
