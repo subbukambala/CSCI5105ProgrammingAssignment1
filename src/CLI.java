@@ -151,7 +151,9 @@ public class CLI {
                                         pID = rv[0];
                                 }
                                 PeerInterface peer = (PeerInterface) Naming.lookup("//"+pIP+"/"+pID);
-                                String meaning = peer.lookup(word, Level.INFO);
+				Level lv = Level.FINE;
+				if(verbose) lv = Level.INFO;
+                                String meaning = peer.lookup(word,lv);
                                 System.out.println(meaning);
 
                         } catch (MalformedURLException e) {
@@ -257,7 +259,6 @@ public class CLI {
                                         System.out.println(pairs.getKey() + " = "
                                                            + pairs.getValue());
 
-                                        // XXX:: logging option should be provided by user
 					Level lv = Level.FINE;
 					if(verbose) lv = Level.INFO;
                                         peer.insert(pairs.getKey().toString(), pairs.getValue()

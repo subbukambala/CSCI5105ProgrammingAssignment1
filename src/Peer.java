@@ -252,7 +252,7 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		   // Modulor case
                    ||(pred.compare(nodeid)>0 && (key.compare(pred)>0 && key.compare(max)<=0) || (key.compare(nodeid)<=0))
                    ) {
-                        lg.log(logLevel, " Peer "+nodeid+" should have word "+word+" with key "+key);
+                        lg.log(logLevel, "(lookup)Peer "+nodeid+" should have word "+word+" with key "+key);
 
 			// Lookup keey 
                         if (dict.get(word) != null) {
@@ -267,7 +267,7 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		else {
                         Key closestNode = ft.getClosestSuccessor(key);
 
-                        lg.log(logLevel, " Peer "+nodeid+" should NOT have word "+word+" with key "+key + " ... calling insert on the best finger table match "+closestNode);
+                        lg.log(logLevel, "(lookup)Peer "+nodeid+" should NOT have word "+word+" with key "+key + " ... calling insert on the best finger table match "+closestNode);
                         PeerInterface peer = getPeer(closestNode);
 			lg.log(Level.FINEST, "lookup Exit");
                         return peer.lookup(word, logLevel);
@@ -294,7 +294,7 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		   // Modulo range 
                    ||(pred.compare(nodeid)>0 && (key.compare(pred)>0 && key.compare(max)<=0) || (key.compare(nodeid)<=0))
                    ) {
-                        lg.log(logLevel, " Peer "+nodeid+" should have word "+word+"("+def+") with key "+key);
+                        lg.log(logLevel, "(insert)Peer "+nodeid+" should have word "+word+"("+def+") with key "+key);
                         dict.put(word, def);
 			lg.log(Level.FINEST, "insert Exit");
                         return true;
@@ -303,7 +303,7 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
 		// ... else find the successor through the finer table
                 Key closestNode = ft.getClosestSuccessor(key);
 
-		lg.log(logLevel, " Peer "+nodeid+" should NOT have word "+word+"("+def+") with key "+key + " ... calling insert on the best finger table match "+closestNode);
+		lg.log(logLevel, "(insert)Peer "+nodeid+" should NOT have word "+word+"("+def+") with key "+key + " ... calling insert on the best finger table match "+closestNode);
 
                 PeerInterface peer = getPeer(closestNode);
 		lg.log(Level.FINEST, "insert Exit");
