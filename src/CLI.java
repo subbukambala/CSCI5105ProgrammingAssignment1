@@ -1,5 +1,5 @@
 /**
- * @Authors Bala Subrahmanyam Kambala, Daniel William DaCosta
+ * @authors Bala Subrahmanyam Kambala, Daniel William DaCosta
  * @license GPLv3 (http://www.gnu.org/copyleft/gpl.html)
  * @descriptrion Command line interface to this DHT system.
  */

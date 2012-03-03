@@ -1,7 +1,7 @@
 /**
  * @authors Bala Subrahmanyam Kambala, Daniel William DaCosta
  * @license GPLv3 (http://www.gnu.org/copyleft/gpl.html)
- * @descriptrion TBD
+ * @descriptrion SHA1 variant of the Hasher interface.
  */
 import java.math.BigInteger;
 import java.security.MessageDigest;

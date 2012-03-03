@@ -49,9 +49,9 @@ public class SuperPeer extends UnicastRemoteObject implements
          */
         private HasherInterface hasher;
 
-	/**
-	 * Used to lock the critical section on peer startup.
-	 */
+        /**
+         * Used to lock the critical section on peer startup.
+         */
         private boolean lock;
 
         /**
@@ -75,35 +75,35 @@ public class SuperPeer extends UnicastRemoteObject implements
         }
 
 
-	@Override
-		public void lock() throws Exception{
+        @Override
+                public void lock() throws Exception{
                 lg.log(Level.FINEST,"SuperPeer lock engaged.");
                 while(lock) {Thread.sleep(1000);}
                 lock = true;
         }
 
-	@Override
-		public synchronized void unlock() throws Exception{
-                lock = false;
-                lg.log(Level.FINEST,"SuperPeer lock disengaged.");
-        }
+        @Override
+                public synchronized void unlock() throws Exception{
+                        lock = false;
+                        lg.log(Level.FINEST,"SuperPeer lock disengaged.");
+                }
 
-	@Override
-		public synchronized Key getSuccessor(Key nodeid)  throws Exception
+        @Override
+                public synchronized Key getSuccessor(Key nodeid)  throws Exception
         {
                 lg.log(Level.FINEST,"getSuccessor Entry.");
                 Iterator<PeerInfo> it = peertable.iterator();
                 PeerInfo fe =  null;
 
-		// Find the first peer key greater than the provided one.
+                // Find the first peer key greater than the provided one.
                 while(it.hasNext()) {
                         fe = it.next();
                         if(fe.getNodeId().compare(nodeid)>0) break;
                         fe = null;
                 }
 
-		// This means that either the peertable is empty or
-		// nodeid provided is higher than all other peers.
+                // This means that either the peertable is empty or
+                // nodeid provided is higher than all other peers.
                 if(fe == null) {
                         lg.log(Level.FINER,"getSuccessor - Highest nodeid or peertable empty try the first entry.");
                         it = peertable.iterator();
@@ -114,13 +114,13 @@ public class SuperPeer extends UnicastRemoteObject implements
                 }
                 Key rv = null;
                 if(fe!=null) rv = fe.getNodeId();
-		else lg.log(Level.FINER,"getSuccessor - No successor found, table must be empty..");
+                else lg.log(Level.FINER,"getSuccessor - No successor found, table must be empty..");
                 lg.log(Level.FINEST,"getSuccessor Exit.");
                 return rv;
         }
 
-	@Override
-		public synchronized Key getPredecessor(Key nodeid)  throws Exception
+        @Override
+                public synchronized Key getPredecessor(Key nodeid)  throws Exception
         {
                 lg.log(Level.FINEST,"getPredecessor Entry.");
                 Iterator<PeerInfo> it = peertable.iterator();
@@ -141,56 +141,56 @@ public class SuperPeer extends UnicastRemoteObject implements
         }
 
 
-	@Override
-		public synchronized Key join() throws Exception {
-                lg.log(Level.FINEST,"join Entry.");
-                Key rv;
-		String ip = RemoteServer.getClientHost();
-                // XXX: ID collisions need to be detected using peertable!
-		rv = hasher.getHash(new Integer(prng.nextInt()).toString());
-		PeerInfo pi = new PeerInfo(rv,ip);
-		while (peertable.contains(pi)) { 
-			rv = hasher.getHash(new Integer(prng.nextInt()).toString());
-			pi = new PeerInfo(rv,ip);
-			lg.log(Level.WARNING, " Random Peer Key Collision, is your key space big enough?");
-		}
-                peertable.add(pi);
-                lg.log(Level.INFO, "!!!! Allocating Node ID " + rv + " to client at "+ip+" !!!!");
-                lg.log(Level.FINEST,"join Exit.");
-                return rv;
-        }
-
-
-	@Override
-		public synchronized HasherInterface getHasher() throws Exception {
-                lg.log(Level.FINEST,"getHasher Entry.");
-                lg.log(Level.FINEST,"getHasher Exit.");
-                return new SHA1Hasher(mbits);
-        }
-
-	@Override
-		public synchronized String getAddress(Key id) throws Exception {
-                lg.log(Level.FINEST, "getAddress Entry.");
-                PeerInfo fe = null;
-                Iterator<PeerInfo> it = peertable.iterator();
-                while(it.hasNext()) {
-                        fe = it.next();
-                        lg.log(Level.FINER, "getAddress - Checking " + fe.getNodeId().toString()+" for match ...");
-                        if (fe.getNodeId().equals(id)) {
-                                lg.log(Level.FINER, "getAddress - match found.");
-                                lg.log(Level.FINEST, "getAddress Exit.");
-                                return fe.getIP();
+        @Override
+                public synchronized Key join() throws Exception {
+                        lg.log(Level.FINEST,"join Entry.");
+                        Key rv;
+                        String ip = RemoteServer.getClientHost();
+                        // XXX: ID collisions need to be detected using peertable!
+                        rv = hasher.getHash(new Integer(prng.nextInt()).toString());
+                        PeerInfo pi = new PeerInfo(rv,ip);
+                        while (peertable.contains(pi)) {
+                                rv = hasher.getHash(new Integer(prng.nextInt()).toString());
+                                pi = new PeerInfo(rv,ip);
+                                lg.log(Level.WARNING, " Random Peer Key Collision, is your key space big enough?");
                         }
+                        peertable.add(pi);
+                        lg.log(Level.INFO, "!!!! Allocating Node ID " + rv + " to client at "+ip+" !!!!");
+                        lg.log(Level.FINEST,"join Exit.");
+                        return rv;
                 }
 
-                lg.log(Level.WARNING, "getAddress failed on " + id.toString()
-                       + ", returning null!");
-                lg.log(Level.FINEST, "getAddress Entry.");
-                return null;
-        }
 
-	@Override
-		public synchronized String[][] getPeers() throws Exception
+        @Override
+                public synchronized HasherInterface getHasher() throws Exception {
+                        lg.log(Level.FINEST,"getHasher Entry.");
+                        lg.log(Level.FINEST,"getHasher Exit.");
+                        return new SHA1Hasher(mbits);
+                }
+
+        @Override
+                public synchronized String getAddress(Key id) throws Exception {
+                        lg.log(Level.FINEST, "getAddress Entry.");
+                        PeerInfo fe = null;
+                        Iterator<PeerInfo> it = peertable.iterator();
+                        while(it.hasNext()) {
+                                fe = it.next();
+                                lg.log(Level.FINER, "getAddress - Checking " + fe.getNodeId().toString()+" for match ...");
+                                if (fe.getNodeId().equals(id)) {
+                                        lg.log(Level.FINER, "getAddress - match found.");
+                                        lg.log(Level.FINEST, "getAddress Exit.");
+                                        return fe.getIP();
+                                }
+                        }
+
+                        lg.log(Level.WARNING, "getAddress failed on " + id.toString()
+                               + ", returning null!");
+                        lg.log(Level.FINEST, "getAddress Entry.");
+                        return null;
+                }
+
+        @Override
+                public synchronized String[][] getPeers() throws Exception
         {
                 String [][] rv = new String[peertable.size()][2];
                 PeerInfo fe = null;
@@ -211,28 +211,28 @@ public class SuperPeer extends UnicastRemoteObject implements
         public static void main (String[] argv)
         {
                 int mbits = 5;
-		ArgumentHandler cli = new ArgumentHandler
-			(
-			 "SuperPeer [-h]"
-			 ,"Run a DHT SuperPeer and attached to the specified superpeer."
-			 ,"Bala Subrahmanyam Kambala, Daniel William DaCosta - GPLv3 (http://www.gnu.org/copyleft/gpl.html)"
-			 );
-		cli.addOption("h", "help", false, "Print this usage information.");
+                ArgumentHandler cli = new ArgumentHandler
+                        (
+                         "SuperPeer [-h]"
+                         ,"Run a DHT SuperPeer and attached to the specified superpeer."
+                         ,"Bala Subrahmanyam Kambala, Daniel William DaCosta - GPLv3 (http://www.gnu.org/copyleft/gpl.html)"
+                         );
+                cli.addOption("h", "help", false, "Print this usage information.");
                 cli.addOption("m", "mbits", true, "The maximum number of unique keys in terms of 2^m (Default is "+Integer.toString(mbits)+").");
 
-		CommandLine commandLine = cli.parse(argv);
-		if( commandLine.hasOption('h') ) {
-			cli.usage("");
-			System.exit(0);
+                CommandLine commandLine = cli.parse(argv);
+                if( commandLine.hasOption('h') ) {
+                        cli.usage("");
+                        System.exit(0);
                 }
-		if( commandLine.hasOption('m') ) {
-			//XXX:uncaught exception!
-			mbits = Integer.parseInt((commandLine.getOptionValue('m')));
-		}
-		try{
-			Naming.rebind ("SuperPeer", new SuperPeer (mbits));
-		} catch (Exception e) {
-			System.out.println ("SuperPeer failed: " + e);
-		}
-	}
+                if( commandLine.hasOption('m') ) {
+                        //XXX:uncaught exception!
+                        mbits = Integer.parseInt((commandLine.getOptionValue('m')));
+                }
+                try{
+                        Naming.rebind ("SuperPeer", new SuperPeer (mbits));
+                } catch (Exception e) {
+                        System.out.println ("SuperPeer failed: " + e);
+                }
+        }
 }

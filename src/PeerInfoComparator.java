@@ -1,19 +1,19 @@
 /**
  * @authors Bala Subrahmanyam Kambala, Daniel William DaCosta
  * @license GPLv3 (http://www.gnu.org/copyleft/gpl.html)
- * @descriptrion TBD
+ * @descriptrion Comparator for PeerInfo
  */
 import java.util.Comparator;
 
 
-public class PeerInfoComparator implements Comparator<PeerInfo> 
+public class PeerInfoComparator implements Comparator<PeerInfo>
 {
 
-	public PeerInfoComparator() {
-	}
+        public PeerInfoComparator() {
+        }
 
-	public int compare(PeerInfo a, PeerInfo b) {
-		return a.getNodeId().compare(b.getNodeId());
-	}
+        public int compare(PeerInfo a, PeerInfo b) {
+                return a.getNodeId().compare(b.getNodeId());
+        }
 
 }
