@@ -1,4 +1,18 @@
-Authors:
+Java Static DHT Dictionary.
+(https://github.com/chaosape/CSCI5105ProgrammingAssignment1)
+(https://github.com/subbukambala/CSCI5105ProgrammingAssignment1/network)
+
+Authors: Bala Subrahmanyam Kambala, Daniel William DaCosta
+-------
+License: GPLv3 (http://www.gnu.org/copyleft/gpl.html), 2012
+-------
+Description: The following code was done as an assignment for CSCI5105 at the
+University of Minnesota. The code implements a simple DHT following the CHORD
+design. It is static because the join phase is assumed to occur up front 
+before any lookup or inserts. These were the specifications of the assignment,
+operation in any other fashion will result in undefined behavior.
+
+Authors Details:
 --------
 1) Daniel William DaCosta
    Student ID:4433217
@@ -14,11 +28,7 @@ TO BUILD:
 cd src/
 make
 
-TO RUN SUPER PEER:
-../scripts/RunSuperPeer.sh
 
-TO RUN PEER: (To run several peers, run this script on different machines)
-../scripts/RunPeer.sh 
 
 TO RUN CLIENT: ( -h option displays help documentation on commands)
 ../scripts/RunCLI.sh [-hL] [-l word] [-f file] [superpeer address]  [-P peer address] [-p peer ID]
@@ -26,5 +36,80 @@ TO RUN CLIENT: ( -h option displays help documentation on commands)
 Example: 
 >../scripts/RunCLI.sh -L localhost 
 This command prints a list of peers which are registered to superpeer(binded on localhost) 
+
+RUNING SUPER PEER:
+------------------
+#Run the Superpeer with default parameters of a bit size of 5
+../scripts/RunSuperPeer.sh 
+#Run the Superpeer with a bit size of 41
+../scripts/RunSuperPeer.sh -m
+#Super Usage
+bash-3.2$ ../scripts/RunSuperPeer.sh -h
+usage: SuperPeer [-h]
+Run a DHT SuperPeer and attached to the specified superpeer.
+ -h,--help          Print this usage information.
+ -m,--mbits <arg>   The maximum number of unique keys in terms of 2^m (Default
+                    is 5).
+Bala Subrahmanyam Kambala, Daniel William DaCosta - GPLv3
+(http://www.gnu.org/copyleft/gpl.html)
+
+
+TO RUN PEER: (To run several peers, run this script on different machines)
+------------
+#Run the Peer with default parameters assuming superpeer is on localhost
+../scripts/RunPeer.sh 
+#Run the Peer with a SuperPeer specified by ip/name
+../scripts/RunPeer.sh 10.0.0.1
+#Peer usage
+bash-3.2$ scripts/RunPeer.sh -h
+usage: Peer [-h] [superpeer address]
+Run a peer and attached to the specified superpeer. If none is provied 
+localhost
+is assumed.
+ -h,--help   Print this usage information.
+Bala Subrahmanyam Kambala, Daniel William DaCosta - GPLv3
+(http://www.gnu.org/copyleft/gpl.html)
+
+
+
+TO RUN CLIENT: ( -h option displays help documentation on commands)
+--------------
+#List peers known by a superpeer
+../scripts/RunCLI.sh -L localhost
+#List peers known by a superpeer
+../scripts/RunCLI.sh -L 10.0.1.124
+#List fingertable entry of a peer with id 11 and ip 10.0.1.124
+../scripts/RunCLI.sh -F -P 10.0.1.124 -p 11 localhost
+#Insert words with verbose output
+../scripts/RunCLI.sh -v -f ../data/SampleWords.txt localhost
+#Lookup a work with verbose output at a peer with id 10 and ip of 10.0.1.24
+../scripts/RunCLI.sh -v -l Adverb -P localhost -p 10 localhost
+#List a peers data table
+../scripts/RunCLI.sh -v -d -P localhost -p 10 localhost
+#CLI usage
+usage: CLI [-hLd] [-l word] [-f file] [superpeer address]  [-P peer address] [
+-p peer ID])
+
+No Superpeer specified, no SuperPeer runnning, or bad SuperPeer address.
+CLI provides remote access to peers and superpeers within this CHORD
+implementation.
+ -d,--data             Output the data for a particular peer. Peer can be
+                       specified with the -P and -p options or will the first
+                       node will be chosen.
+ -f,--filename <arg>   Load all definitions from a file from a particular peer.
+ -F,--fingertable      Output the finger table, predecessor and success of a
+                       particular peer. Peer can be specified with the -P and 
+		       -p
+                       options or will the first node will be chosen.
+ -h,--help             Print this usage information.
+ -L,--listpeers        Calls the RMI getPeer on the provided host. It will list
+                       all known peers.
+ -l,--lookup <arg>     Lookup a word from a particular peer.
+ -P,--peerIP <arg>     Specify the peer IP address. If none is provided, one
+                       will be choosen if required by the directive.
+ -p,--peerId <arg>     Specify the peer Id address.
+ -v,--verbose          When set insert and lookup will output log messages.
+Bala Subrahmanyam Kambala, Daniel William DaCosta - GPLv3
+(http://www.gnu.org/copyleft/gpl.html)
 
 
